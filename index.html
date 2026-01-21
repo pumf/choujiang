@@ -689,6 +689,21 @@
 
     <div class="main-content">
         <h1 class="title" id="lottery-title">🎉 年会抽奖系统 🎊</h1>
+        
+        <div class="stats-bar" id="stats-bar" style="display:flex;gap:20px;margin-bottom:20px;justify-content:center;">
+            <div class="stat-item" style="background:rgba(255,255,255,0.1);padding:12px 25px;border-radius:12px;">
+                <span style="color:#48dbfb;">总人数</span>
+                <span id="total-count" style="font-size:1.5em;font-weight:bold;margin-left:8px;">0</span>
+            </div>
+            <div class="stat-item" style="background:rgba(255,255,255,0.1);padding:12px 25px;border-radius:12px;">
+                <span style="color:#feca57;">已中奖</span>
+                <span id="won-count" style="font-size:1.5em;font-weight:bold;margin-left:8px;">0</span>
+            </div>
+            <div class="stat-item" style="background:rgba(255,255,255,0.1);padding:12px 25px;border-radius:12px;">
+                <span style="color:#1dd1a1;">待抽奖</span>
+                <span id="remain-count" style="font-size:1.5em;font-weight:bold;margin-left:8px;">0</span>
+            </div>
+        </div>
 
         <div class="people-area">
             <div class="people-grid" id="people-grid">
@@ -817,6 +832,7 @@
         let currentPrizeIndex = null;
         let isLotteryRunning = false;
         let animationId = null;
+        let currentAnimationData = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
@@ -826,31 +842,8 @@
             document.getElementById('settings-btn').addEventListener('click', showSettings);
             document.getElementById('stop-btn').addEventListener('click', stopLottery);
             document.getElementById('cancel-btn').addEventListener('click', cancelLottery);
+            document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
         });
-
-        function loadData() {
-            const savedData = localStorage.getItem('lotteryData');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                people = data.people || [];
-                prizes = data.prizes || [];
-                history = data.history || [];
-                settings = data.settings || { title: '🎉 年会抽奖系统 🎊', background: 'gradient1' };
-            }
-        }
-
-        function saveData() {
-            const dataToSave = {
-                people,
-                prizes,
-                history,
-                settings: {
-                    title: settings.title,
-                    background: settings.background || 'gradient1'
-                }
-            };
-            localStorage.setItem('lotteryData', JSON.stringify(dataToSave));
-        }
 
         function loadData() {
             const savedData = localStorage.getItem('lotteryData');
@@ -863,9 +856,12 @@
             }
         }
 
+        function saveData() {
+
         function renderAll() {
             renderTitle();
             renderBg();
+            renderStats();
             renderPrizes();
             renderPeople();
         }
@@ -1146,23 +1142,6 @@
                 showWinners(prize, winners);
                 launchFireworks();
             }, 300);
-
-            const btn = document.getElementById('lottery-btn');
-            btn.disabled = false;
-            btn.textContent = '🎰 开始抽奖';
-            btn.classList.remove('running');
-        }
-
-        function cancelLottery() {
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
-            }
-
-            const ball = document.getElementById('lottery-ball');
-            ball.style.animation = 'none';
-
-            document.getElementById('ball-container').classList.remove('active');
 
             const btn = document.getElementById('lottery-btn');
             btn.disabled = false;
