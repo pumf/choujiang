@@ -857,6 +857,17 @@
         }
 
         function saveData() {
+            const dataToSave = {
+                people,
+                prizes,
+                history,
+                settings: {
+                    title: settings.title,
+                    background: settings.background || 'gradient1'
+                }
+            };
+            localStorage.setItem('lotteryData', JSON.stringify(dataToSave));
+        }
 
         function renderAll() {
             renderTitle();
