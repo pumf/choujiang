@@ -689,21 +689,6 @@
 
     <div class="main-content">
         <h1 class="title" id="lottery-title">🎉 年会抽奖系统 🎊</h1>
-        
-        <div class="stats-bar" id="stats-bar" style="display:flex;gap:20px;margin-bottom:20px;justify-content:center;">
-            <div class="stat-item" style="background:rgba(255,255,255,0.1);padding:12px 25px;border-radius:12px;">
-                <span style="color:#48dbfb;">总人数</span>
-                <span id="total-count" style="font-size:1.5em;font-weight:bold;margin-left:8px;">0</span>
-            </div>
-            <div class="stat-item" style="background:rgba(255,255,255,0.1);padding:12px 25px;border-radius:12px;">
-                <span style="color:#feca57;">已中奖</span>
-                <span id="won-count" style="font-size:1.5em;font-weight:bold;margin-left:8px;">0</span>
-            </div>
-            <div class="stat-item" style="background:rgba(255,255,255,0.1);padding:12px 25px;border-radius:12px;">
-                <span style="color:#1dd1a1;">待抽奖</span>
-                <span id="remain-count" style="font-size:1.5em;font-weight:bold;margin-left:8px;">0</span>
-            </div>
-        </div>
 
         <div class="people-area">
             <div class="people-grid" id="people-grid">
@@ -872,7 +857,6 @@
         function renderAll() {
             renderTitle();
             renderBg();
-            renderStats();
             renderPrizes();
             renderPeople();
         }
