@@ -500,6 +500,7 @@
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            perspective: 1200px;
         }
 
         .ball-container.active {
@@ -524,15 +525,13 @@
             height: 70px;
             background: linear-gradient(145deg, #e74c3c, #c0392b);
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
             transform-style: preserve-3d;
-            backface-visibility: visible;
+            backface-visibility: hidden;
             transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
 
         .ball-item::before {
@@ -545,6 +544,7 @@
             height: 35px;
             background: linear-gradient(145deg, #f1c40f, #f39c12);
             border-radius: 50%;
+            transform: translate(-50%, -50%) translateZ(1px);
         }
 
         .ball-item::after {
@@ -552,7 +552,7 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) translateZ(1px);
             font-size: 18px;
             font-weight: bold;
             color: #c0392b;
@@ -573,6 +573,18 @@
             overflow: hidden;
             text-overflow: ellipsis;
             z-index: 2;
+            transform: translateZ(2px);
+        }
+
+        .ball-item .thickness {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #c0392b, #a93226);
+            border-radius: 12px;
+            transform: translateZ(-8px);
         }
 
         .ball-item.gather {
@@ -1077,7 +1089,7 @@
 
                 const item = document.createElement('div');
                 item.className = 'ball-item gather';
-                item.innerHTML = `<span class="name">${availablePeople[i].name}</span>`;
+                item.innerHTML = `<span class="name">${availablePeople[i].name}</span><div class="thickness"></div>`;
                 item.dataset.theta = theta;
                 item.dataset.yPos = y * radius;
                 ball.appendChild(item);
