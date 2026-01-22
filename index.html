@@ -1521,84 +1521,127 @@
                 });
             }, 80);
             
-            // 停止并揭晓
+            // 停止并揭晓（减速效果）
             window.stopSlide = () => {
                 if (!sliding) return;
                 sliding = false;
                 clearInterval(slideInterval);
                 
-                // 清除所有高亮效果
-                if (lastHighlightedPacket && lastHighlightedPacket.element) {
-                    lastHighlightedPacket.element.classList.remove('slide-highlight');
-                }
-                packetRects.forEach(packet => {
-                    if (packet.element) {
-                        packet.element.classList.remove('slide-highlight');
-                    }
+                stopBtn.disabled = true;
+                stopBtn.textContent = '⏳ 减速中...';
+                
+                // 减速动画：逐渐增加过渡时间，模拟减速效果
+                const tilesElements = tiles.map(t => t.element);
+                tilesElements.forEach(tile => {
+                    tile.style.transition = 'transform 0.5s ease-out';
                 });
                 
-                stopBtn.disabled = true;
-                stopBtn.textContent = '⏳ 揭晓中...';
+                // 减速阶段：3秒内逐渐变慢
+                let remainingTime = 3000;
+                let currentInterval = 80;
+                const decelerationSteps = [
+                    { interval: 120, duration: 500 },
+                    { interval: 200, duration: 500 },
+                    { interval: 300, duration: 500 },
+                    { interval: 400, duration: 500 },
+                    { interval: 500, duration: 500 },
+                    { interval: 600, duration: 500 }
+                ];
                 
-                // 随机选择中奖者
-                const shuffled = [...availablePeople].sort(() => Math.random() - 0.5);
-                const winners = shuffled.slice(0, tileCount);
-                
-                // 延迟后揭晓结果
-                setTimeout(() => {
-                    // 为每个方块显示目标位置的姓名
-                    winners.forEach((winner, index) => {
-                        const tileObj = tiles[index];
-                        const target = tileObj.currentTarget || packetRects[index % packetRects.length];
+                const runDeceleration = async () => {
+                    for (const step of decelerationSteps) {
+                        if (!sliding) break;
                         
-                        // 高亮目标红包
-                        if (target && target.element) {
-                            target.element.classList.add('won');
-                            // 更新正面显示姓名和奖项
-                            const frontFace = target.element.querySelector('.front');
-                            if (frontFace) {
-                                frontFace.innerHTML = `<span class="won-prize">${prize.name}</span><span class="won-name">${winner.name}</span>`;
+                        await new Promise(resolve => setTimeout(resolve, step.interval));
+                        
+                        // 随机移动到新位置
+                        tiles.forEach(tileObj => {
+                            const randomPacket = packetRects[Math.floor(Math.random() * packetRects.length)];
+                            tileObj.currentTarget = randomPacket;
+                            
+                            // 移除上一个高亮
+                            if (lastHighlightedPacket && lastHighlightedPacket.element) {
+                                lastHighlightedPacket.element.classList.remove('slide-highlight');
                             }
+                            
+                            // 高亮当前红包
+                            if (randomPacket.element) {
+                                randomPacket.element.classList.add('slide-highlight');
+                            }
+                            lastHighlightedPacket = randomPacket;
+                            
+                            tileObj.element.style.transition = `transform ${step.duration}ms ease-out`;
+                            tileObj.element.style.transform = `translate3d(${randomPacket.x - 25}px, ${randomPacket.y - 25}px, 0)`;
+                        });
+                    }
+                    
+                    // 减速完成，揭晓结果
+                    if (sliding === false) {
+                        // 清除高亮
+                        if (lastHighlightedPacket && lastHighlightedPacket.element) {
+                            lastHighlightedPacket.element.classList.remove('slide-highlight');
                         }
+                        packetRects.forEach(packet => {
+                            if (packet.element) {
+                                packet.element.classList.remove('slide-highlight');
+                            }
+                        });
                         
-                        // 更新方块显示
-                        tileObj.element.innerHTML = `✅`;
-                        tileObj.element.style.background = 'linear-gradient(145deg, #2ecc71, #27ae60)';
+                        stopBtn.textContent = '⏳ 揭晓中...';
                         
-                        // 更新人员数据
-                        const personIndex = people.findIndex(p => p.id === winner.id);
-                        if (personIndex !== -1) {
-                            people[personIndex].prize = prize.name;
-                        }
-                    });
-                    
-                    // 标记奖项已发放
-                    prize.awarded = true;
-                    currentPrizeIndex = null;
-                    
-                    // 保存数据
-                    saveData();
-                    
-                    // 显示中奖弹窗
-                    setTimeout(() => {
-                        renderAll();
-                        showWinners(prize, winners);
+                        // 随机选择中奖者
+                        const shuffled = [...availablePeople].sort(() => Math.random() - 0.5);
+                        const winners = shuffled.slice(0, tileCount);
                         
-                        // 清理滑动层
+                        // 揭晓结果
                         setTimeout(() => {
-                            slideLayer.style.pointerEvents = 'none';
-                            slideLayer.innerHTML = '';
-                        }, 500);
-                        
-                        // 重置按钮状态
-                        const btn = document.getElementById('lottery-btn');
-                        btn.disabled = false;
-                        btn.textContent = '🎰 开始抽奖';
-                        btn.classList.remove('running');
-                        btn.style.visibility = 'visible';
-                        isLotteryRunning = false;
-                    }, 300);
-                }, 500);
+                            winners.forEach((winner, index) => {
+                                const tileObj = tiles[index];
+                                const target = packetRects[index % packetRects.length];
+                                
+                                if (target && target.element) {
+                                    target.element.classList.add('won');
+                                    const frontFace = target.element.querySelector('.front');
+                                    if (frontFace) {
+                                        frontFace.innerHTML = `<span class="won-prize">${prize.name}</span><span class="won-name">${winner.name}</span>`;
+                                    }
+                                }
+                                
+                                tileObj.element.innerHTML = `✅`;
+                                tileObj.element.style.background = 'linear-gradient(145deg, #2ecc71, #27ae60)';
+                                
+                                const personIndex = people.findIndex(p => p.id === winner.id);
+                                if (personIndex !== -1) {
+                                    people[personIndex].prize = prize.name;
+                                }
+                            });
+                            
+                            prize.awarded = true;
+                            currentPrizeIndex = null;
+                            
+                            saveData();
+                            
+                            setTimeout(() => {
+                                renderAll();
+                                showWinners(prize, winners);
+                                
+                                setTimeout(() => {
+                                    slideLayer.style.pointerEvents = 'none';
+                                    slideLayer.innerHTML = '';
+                                }, 500);
+                                
+                                const btn = document.getElementById('lottery-btn');
+                                btn.disabled = false;
+                                btn.textContent = '🎰 开始抽奖';
+                                btn.classList.remove('running');
+                                btn.style.visibility = 'visible';
+                                isLotteryRunning = false;
+                            }, 300);
+                        }, 300);
+                    }
+                };
+                
+                runDeceleration();
             };
             
             // 绑定停止按钮
