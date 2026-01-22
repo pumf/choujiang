@@ -312,22 +312,43 @@
         .red-packet.won::after {
             content: '中';
             color: #fff;
-            top: 35%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9em;
+            font-weight: bold;
+            z-index: 1;
         }
 
-        .red-packet.won .front .name {
-            position: absolute !important;
-            bottom: 15% !important;
-            left: 5% !important;
-            right: 5% !important;
-            text-align: center;
-            font-size: 0.65em;
+        .red-packet.won .front {
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        .red-packet.won .won-prize {
+            font-size: 0.5em;
+            color: #c0392b;
             font-weight: bold;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .red-packet.won .won-name {
+            font-size: 0.55em;
             color: #fff;
+            font-weight: bold;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            max-width: 90%;
+            text-align: center;
         }
 
         .lottery-btn {
@@ -1131,9 +1152,8 @@
             }
             container.innerHTML = people.map((person, index) => {
                 const won = !!person.prize;
-                // 未中奖：背面展示姓名，前面不显示姓名；已中奖：前面展示姓名
                 const frontContent = won
-                    ? `<span class="name" style="font-size:0.75em">${person.name}</span>`
+                    ? `<span class="won-prize">${person.prize}</span><span class="won-name">${person.name}</span>`
                     : `<span class="front-name" style="visibility:hidden"></span>`;
                 return `
                     <div class="red-packet ${won ? 'won' : ''}" onclick="showPersonInfo(${index})" title="${person.name}">
@@ -1184,6 +1204,8 @@
             const nameSize = Math.max(8, cellSize * 0.18);
             const circleSize = cellSize * 0.42;
             const fontSize = Math.max(10, cellSize * 0.32);
+            const wonPrizeSize = Math.max(6, cellSize * 0.14);
+            const wonNameSize = Math.max(7, cellSize * 0.16);
 
             const existing = document.getElementById('packet-dynamic-styles');
             if (existing) existing.remove();
@@ -1193,6 +1215,8 @@
                 .red-packet::before { width: ${circleSize}px !important; height: ${circleSize}px !important; }
                 .red-packet::after { font-size: ${fontSize}px !important; }
                 .red-packet .name { font-size: ${nameSize}px !important; bottom: ${cellSize * 0.06}px !important; }
+                .red-packet.won .won-prize { font-size: ${wonPrizeSize}px !important; }
+                .red-packet.won .won-name { font-size: ${wonNameSize}px !important; }
             `;
             document.head.appendChild(styleEl);
         }
@@ -1427,10 +1451,10 @@
                         // 高亮目标红包
                         if (target && target.element) {
                             target.element.classList.add('won');
-                            // 更新正面显示姓名
+                            // 更新正面显示姓名和奖项
                             const frontFace = target.element.querySelector('.front');
                             if (frontFace) {
-                                frontFace.innerHTML = `<span class="name" style="font-size:0.75em">${winner.name}</span>`;
+                                frontFace.innerHTML = `<span class="won-prize">${prize.name}</span><span class="won-name">${winner.name}</span>`;
                             }
                         }
                         
