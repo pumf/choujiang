@@ -141,12 +141,32 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 30px;
+            padding: 15px 30px;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             position: relative;
+        }
+
+        .people-area {
+            flex: 1;
+            width: 100%;
+            max-width: 1400px;
+            padding: 10px 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .people-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(55px, 1fr));
+            grid-auto-rows: minmax(55px, 1fr);
+            gap: 6px;
+            padding: 5px;
+            overflow: hidden;
+            align-content: stretch;
         }
 
         .bg-overlay {
@@ -160,7 +180,7 @@
         }
 
         .title {
-            font-size: 3.5em;
+            font-size: 2.2em;
             font-weight: bold;
             background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #ff6b6b);
             background-size: 300% 300%;
@@ -168,44 +188,13 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             animation: gradientMove 4s ease infinite;
-            text-shadow: 0 0 60px rgba(255, 107, 107, 0.3);
-            margin-bottom: 20px;
+            text-shadow: 0 0 40px rgba(255, 107, 107, 0.3);
+            margin-bottom: 10px;
         }
 
         @keyframes gradientMove {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
-        }
-
-        .title {
-            font-size: 3.5em;
-            font-weight: bold;
-            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #ff6b6b);
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradientMove 4s ease infinite;
-            text-shadow: 0 0 60px rgba(255, 107, 107, 0.3);
-            margin-bottom: 20px;
-        }
-
-        .people-area {
-            flex: 1;
-            width: 100%;
-            max-width: 1200px;
-            padding: 25px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .people-area h3 {
-            color: #48dbfb;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .people-grid {
@@ -299,22 +288,22 @@
         }
 
         .lottery-btn {
-            padding: 18px 60px;
-            font-size: 1.4em;
+            padding: 12px 40px;
+            font-size: 1.2em;
             font-weight: bold;
             border: none;
-            border-radius: 50px;
+            border-radius: 40px;
             cursor: pointer;
             background: linear-gradient(45deg, #ff6b6b, #feca57);
             color: #fff;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 30px rgba(255, 107, 107, 0.4);
-            margin-top: 20px;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+            margin-top: 10px;
         }
 
         .lottery-btn:hover:not(:disabled) {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 20px 60px rgba(255, 107, 107, 0.6);
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.5);
         }
 
         .lottery-btn:disabled {
@@ -729,12 +718,9 @@
         }
 
         @media (max-width: 768px) {
-            .title { font-size: 2.2em; }
-            .stats-bar { gap: 15px; }
-            .stat-item { padding: 10px 20px; }
-            .stat-item .number { font-size: 1.5em; }
-            .lottery-btn { padding: 20px 60px; font-size: 1.5em; }
-            .people-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+            .title { font-size: 1.8em; }
+            .lottery-btn { padding: 10px 30px; font-size: 1.1em; }
+            .people-grid { grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)); grid-auto-rows: minmax(50px, 1fr); }
             .prize-panel { width: 260px; }
         }
     </style>
