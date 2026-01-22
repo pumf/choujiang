@@ -105,6 +105,12 @@
             cursor: not-allowed;
         }
 
+        .prize-item.unselectable {
+            opacity: 0.4;
+            cursor: not-allowed;
+            filter: grayscale(50%);
+        }
+
         .prize-item .name {
             font-size: 1em;
             font-weight: bold;
@@ -1129,11 +1135,15 @@
                 container.innerHTML = '<div class="empty-state"><div class="icon">🏆</div><p>暂无奖项</p></div>';
                 return;
             }
+            
+            const firstUnawardedIndex = prizes.findIndex(p => !p.awarded);
+            
             container.innerHTML = prizes.map((prize, index) => {
                 const winners = people.filter(p => p.prize === prize.name);
+                const isClickable = !prize.awarded && (index === firstUnawardedIndex || currentPrizeIndex === index);
                 return `
-                <div class="prize-item ${prize.awarded ? 'disabled' : ''} ${currentPrizeIndex === index ? 'active' : ''}"
-                     onclick="selectPrize(${index})" style="border-left-color: ${prize.color}">
+                <div class="prize-item ${prize.awarded ? 'disabled' : ''} ${!isClickable && !prize.awarded ? 'unselectable' : ''} ${currentPrizeIndex === index ? 'active' : ''}"
+                     onclick="isClickable ? selectPrize(${index}) : null" style="border-left-color: ${prize.color}">
                     <div class="name" style="color: ${prize.color}">${prize.name}</div>
                     <div class="desc">${prize.desc}</div>
                     <div class="info">
@@ -1148,7 +1158,11 @@
 
         function selectPrize(index) {
             if (prizes[index].awarded) return;
-            currentPrizeIndex = currentPrizeIndex === index ? null : index;
+            if (currentPrizeIndex === index) {
+                currentPrizeIndex = null;
+            } else {
+                currentPrizeIndex = index;
+            }
             renderPrizes();
         }
 
@@ -1294,6 +1308,12 @@
 
             if (!name) { alert('请输入奖项名称'); return; }
 
+            const duplicatePrize = prizes.find(p => p.name.toLowerCase() === name.toLowerCase());
+            if (duplicatePrize) {
+                alert('奖项名称已存在，请使用其他名称');
+                return;
+            }
+
             prizes.push({ id: Date.now(), name, desc, count, color, awarded: false });
             saveData();
             renderPrizes();
@@ -1305,23 +1325,28 @@
         }
 
         function clearPrizes() {
-            if (confirm('确定要清空所有奖项吗？')) {
+            if (confirm('确定要清空所有奖项吗？中奖记录将一并清除')) {
                 prizes = [];
+                people.forEach(p => p.prize = null);
+                currentPrizeIndex = null;
                 saveData();
-                renderPrizes();
+                renderAll();
             }
         }
 
         function startLottery() {
             console.log('开始抽奖按钮被点击');
             let prize;
+            let prizeIndex;
             if (currentPrizeIndex !== null) {
                 prize = prizes[currentPrizeIndex];
+                prizeIndex = currentPrizeIndex;
             } else {
                 const availablePrizes = prizes.filter(p => !p.awarded);
                 console.log('可用奖项数量:', availablePrizes.length);
                 if (availablePrizes.length === 0) { alert('所有奖项都已抽取完毕！'); return; }
-                prize = availablePrizes[Math.floor(Math.random() * availablePrizes.length)];
+                prizeIndex = prizes.findIndex(p => !p.awarded);
+                prize = prizes[prizeIndex];
             }
 
             const availablePeople = people.filter(p => !p.prize);
@@ -1479,6 +1504,7 @@
                     
                     // 标记奖项已发放
                     prize.awarded = true;
+                    currentPrizeIndex = null;
                     
                     // 保存数据
                     saveData();
@@ -1694,12 +1720,27 @@
             const text = document.getElementById('add-people-text').value.trim();
             if (!text) { alert('请输入姓名'); return; }
             const names = text.split('\n').map(n => n.trim()).filter(n => n);
-            const newPeople = names.map(name => ({ id: Date.now() + Math.random(), name, prize: null }));
+            
+            const existingNames = new Set(people.map(p => p.name.toLowerCase()));
+            const uniqueNames = names.filter(n => !existingNames.has(n.toLowerCase()));
+            const duplicateNames = names.filter(n => existingNames.has(n.toLowerCase()));
+            
+            if (uniqueNames.length === 0) {
+                alert('所有姓名都已存在');
+                return;
+            }
+            
+            const newPeople = uniqueNames.map(name => ({ id: Date.now() + Math.random(), name, prize: null }));
             people = [...people, ...newPeople];
             saveData();
             renderAll();
             document.getElementById('add-people-text').value = '';
-            alert(`成功添加 ${newPeople.length} 名人员`);
+            
+            let msg = `成功添加 ${newPeople.length} 名人员`;
+            if (duplicateNames.length > 0) {
+                msg += `\n跳过重复姓名: ${duplicateNames.join('、')}`;
+            }
+            alert(msg);
         }
 
         function clearPeople() {
@@ -1785,6 +1826,7 @@
                 prizes = [];
                 history = [];
                 settings = { title: '🎉 年会抽奖系统 🎊', background: 'gradient1' };
+                currentPrizeIndex = null;
                 saveData();
                 renderAll();
                 closeSettings();
