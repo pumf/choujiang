@@ -593,17 +593,15 @@
 
         .ball-item {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             background: linear-gradient(145deg, #e74c3c, #c0392b);
-            border-radius: 8px;
-            transform-style: preserve-3d;
-            backface-visibility: hidden;
-            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .ball-item::before {
@@ -611,9 +609,9 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) translateZ(1px);
-            width: 22px;
-            height: 22px;
+            transform: translate(-50%, -50%);
+            width: 28px;
+            height: 28px;
             background: linear-gradient(145deg, #f1c40f, #f39c12);
             border-radius: 50%;
         }
@@ -623,8 +621,8 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) translateZ(1px);
-            font-size: 12px;
+            transform: translate(-50%, -50%);
+            font-size: 16px;
             font-weight: bold;
             color: #c0392b;
             z-index: 1;
@@ -632,11 +630,11 @@
 
         .ball-item .name {
             position: absolute;
-            bottom: 3px;
+            bottom: 4px;
             left: 2px;
             right: 2px;
             text-align: center;
-            font-size: 8px;
+            font-size: 9px;
             font-weight: bold;
             color: #fff;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -644,47 +642,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             z-index: 2;
-            transform: translateZ(2px);
-        }
-
-        .ball-item::after {
-            content: '福';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) translateZ(1px);
-            font-size: 18px;
-            font-weight: bold;
-            color: #c0392b;
-            z-index: 1;
-        }
-
-        .ball-item .name {
-            position: absolute;
-            bottom: 5px;
-            left: 3px;
-            right: 3px;
-            text-align: center;
-            font-size: 10px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            z-index: 2;
-            transform: translateZ(2px);
-        }
-
-        .ball-item .thickness {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(145deg, #c0392b, #a93226);
-            border-radius: 8px;
-            transform: translateZ(-6px);
         }
 
         .ball-item.gather {
@@ -1189,7 +1146,7 @@
 
                 const item = document.createElement('div');
                 item.className = 'ball-item gather';
-                item.innerHTML = `<span class="name">${availablePeople[i].name}</span><div class="thickness"></div>`;
+                item.innerHTML = `<span class="name">${availablePeople[i].name}</span>`;
                 item.dataset.theta = theta;
                 item.dataset.yPos = y * radius;
                 ball.appendChild(item);
