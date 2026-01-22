@@ -1075,13 +1075,18 @@
                 const x = Math.cos(theta) * radiusAtY * radius;
                 const z = Math.sin(theta) * radiusAtY * radius;
 
+                const rotY = Math.atan2(x, z) * (180 / Math.PI);
+                const rotX = -Math.asin(y) * (180 / Math.PI);
+
                 const item = document.createElement('div');
                 item.className = 'ball-item gather';
                 item.innerHTML = `<span class="name">${availablePeople[i].name}</span>`;
-                item.style.transform = `translate3d(${x}px, ${y * radius}px, ${z}px)`;
+                item.style.transform = `translate3d(${x}px, ${y * radius}px, ${z}px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
                 item.dataset.x = x;
                 item.dataset.y = y * radius;
                 item.dataset.z = z;
+                item.dataset.rotX = rotX;
+                item.dataset.rotY = rotY;
                 ball.appendChild(item);
             }
 
@@ -1091,12 +1096,14 @@
                     const x = parseFloat(item.dataset.x);
                     const y = parseFloat(item.dataset.y);
                     const z = parseFloat(item.dataset.z);
-                    item.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateY(0deg)`;
+                    const rotX = parseFloat(item.dataset.rotX);
+                    const rotY = parseFloat(item.dataset.rotY);
+                    item.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
                 });
             }, 50);
 
             setTimeout(() => {
-                ball.style.animation = 'rotateY 8s linear infinite';
+                ball.style.animation = 'rotateY 4s linear infinite';
             }, 1000);
         }
 
