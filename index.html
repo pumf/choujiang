@@ -161,9 +161,8 @@
         .people-grid {
             flex: 1;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(55px, 1fr));
-            grid-auto-rows: minmax(55px, 1fr);
-            gap: 6px;
+            grid-template-columns: repeat(auto-fit, minmax(1px, 1fr));
+            gap: 4px;
             padding: 5px;
             overflow: hidden;
             align-content: stretch;
@@ -214,18 +213,16 @@
         .red-packet {
             aspect-ratio: 1;
             background: linear-gradient(145deg, #e74c3c, #c0392b);
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
             position: relative;
             border: none;
-            min-width: 50px;
-            min-height: 50px;
         }
 
         .red-packet::before {
@@ -1012,7 +1009,53 @@
                     <span class="name">${person.name}</span>
                 </div>
             `).join('');
+            
+            setTimeout(() => adjustPacketSize(), 0);
         }
+
+        function adjustPacketSize() {
+            const container = document.getElementById('people-grid');
+            if (!container || people.length === 0) return;
+            
+            const containerRect = container.getBoundingClientRect();
+            const count = people.length;
+            
+            const cols = Math.ceil(Math.sqrt(count * containerRect.width / containerRect.height));
+            const rows = Math.ceil(count / cols);
+            
+            const cellWidth = (containerRect.width - 10) / cols;
+            const cellHeight = (containerRect.height - 10) / rows;
+            const cellSize = Math.min(cellWidth, cellHeight, 80);
+            
+            const packets = container.querySelectorAll('.red-packet');
+            packets.forEach(p => {
+                p.style.width = cellSize + 'px';
+                p.style.height = cellSize + 'px';
+                p.style.borderRadius = Math.max(4, cellSize * 0.15) + 'px';
+            });
+            
+            const nameSize = Math.max(8, cellSize * 0.18);
+            const circleSize = cellSize * 0.45;
+            const fontSize = Math.max(10, cellSize * 0.35);
+            
+            const style = document.getElementById('packet-dynamic-styles');
+            if (style) style.remove();
+            
+            const styleEl = document.createElement('style');
+            styleEl.id = 'packet-dynamic-styles';
+            styleEl.textContent = `
+                .red-packet::before { width: ${circleSize}px !important; height: ${circleSize}px !important; }
+                .red-packet::after { font-size: ${fontSize}px !important; }
+                .red-packet .name { font-size: ${nameSize}px !important; bottom: ${cellSize * 0.08}px !important; }
+            `;
+            document.head.appendChild(styleEl);
+        }
+
+        window.addEventListener('resize', () => {
+            if (people.length > 0) {
+                setTimeout(adjustPacketSize, 100);
+            }
+        });
 
         function showPersonInfo(index) {
             const person = people[index];
