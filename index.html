@@ -322,14 +322,15 @@
         }
 
         .red-packet.won .front {
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 0 2px;
+            position: relative;
         }
 
         .red-packet.won .won-prize {
-            font-size: 0.45em;
+            position: absolute;
+            top: 18%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.4em;
             color: #c0392b;
             font-weight: bold;
             text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
@@ -338,11 +339,15 @@
             text-overflow: ellipsis;
             max-width: 90%;
             text-align: center;
-            margin-bottom: 8%;
+            z-index: 2;
         }
 
         .red-packet.won .won-name {
-            font-size: 0.5em;
+            position: absolute;
+            top: 82%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.45em;
             color: #fff;
             font-weight: bold;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
@@ -351,7 +356,7 @@
             text-overflow: ellipsis;
             max-width: 90%;
             text-align: center;
-            margin-top: 8%;
+            z-index: 2;
         }
 
         .lottery-btn {
