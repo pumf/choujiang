@@ -162,8 +162,8 @@
             flex: 1;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(1px, 1fr));
-            gap: 4px;
-            padding: 5px;
+            gap: 0;
+            padding: 0;
             overflow: hidden;
             align-content: stretch;
         }
@@ -1019,24 +1019,28 @@
             
             const containerRect = container.getBoundingClientRect();
             const count = people.length;
+            const gap = 8;
             
             const cols = Math.ceil(Math.sqrt(count * containerRect.width / containerRect.height));
             const rows = Math.ceil(count / cols);
             
-            const cellWidth = (containerRect.width - 10) / cols;
-            const cellHeight = (containerRect.height - 10) / rows;
-            const cellSize = Math.min(cellWidth, cellHeight, 80);
+            const cellWidth = (containerRect.width - gap * (cols + 1)) / cols;
+            const cellHeight = (containerRect.height - gap * (rows + 1)) / rows;
+            const cellSize = Math.min(cellWidth, cellHeight);
             
             const packets = container.querySelectorAll('.red-packet');
             packets.forEach(p => {
                 p.style.width = cellSize + 'px';
                 p.style.height = cellSize + 'px';
-                p.style.borderRadius = Math.max(4, cellSize * 0.15) + 'px';
+                p.style.margin = (gap / 2) + 'px';
+                p.style.borderRadius = Math.max(4, cellSize * 0.12) + 'px';
             });
             
-            const nameSize = Math.max(8, cellSize * 0.18);
-            const circleSize = cellSize * 0.45;
-            const fontSize = Math.max(10, cellSize * 0.35);
+            container.style.gap = '0';
+            
+            const nameSize = Math.max(8, cellSize * 0.16);
+            const circleSize = cellSize * 0.42;
+            const fontSize = Math.max(10, cellSize * 0.32);
             
             const style = document.getElementById('packet-dynamic-styles');
             if (style) style.remove();
@@ -1046,7 +1050,7 @@
             styleEl.textContent = `
                 .red-packet::before { width: ${circleSize}px !important; height: ${circleSize}px !important; }
                 .red-packet::after { font-size: ${fontSize}px !important; }
-                .red-packet .name { font-size: ${nameSize}px !important; bottom: ${cellSize * 0.08}px !important; }
+                .red-packet .name { font-size: ${nameSize}px !important; bottom: ${cellSize * 0.06}px !important; }
             `;
             document.head.appendChild(styleEl);
         }
