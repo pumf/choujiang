@@ -211,35 +211,32 @@
         .people-grid {
             flex: 1;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-            gap: 12px;
-            overflow-y: auto;
-            padding: 5px;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 8px;
+            padding: 10px;
+            overflow: hidden;
+            align-content: center;
         }
 
         .people-grid::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .people-grid::-webkit-scrollbar-thumb {
-            background: linear-gradient(45deg, #ff6b6b, #feca57);
-            border-radius: 3px;
+            display: none;
         }
 
         .red-packet {
             aspect-ratio: 1;
             background: linear-gradient(145deg, #e74c3c, #c0392b);
-            border-radius: 12px;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+            box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
             position: relative;
-            overflow: hidden;
             border: none;
+            min-width: 50px;
+            min-height: 50px;
         }
 
         .red-packet::before {
@@ -248,8 +245,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
+            width: 45%;
+            height: 45%;
             background: linear-gradient(145deg, #f1c40f, #f39c12);
             border-radius: 50%;
         }
@@ -260,7 +257,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 1.3em;
+            font-size: 0.9em;
             font-weight: bold;
             color: #c0392b;
             z-index: 1;
@@ -268,11 +265,11 @@
 
         .red-packet .name {
             position: absolute;
-            bottom: 8px;
-            left: 4px;
-            right: 4px;
+            bottom: 8%;
+            left: 5%;
+            right: 5%;
             text-align: center;
-            font-size: 0.7em;
+            font-size: 0.65em;
             font-weight: bold;
             color: #fff;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
