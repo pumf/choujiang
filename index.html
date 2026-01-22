@@ -392,6 +392,78 @@
             text-align: center;
         }
 
+        .winner-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .winner-modal.active {
+            display: flex;
+        }
+
+        .winner-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+            animation: modalPop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .winner-content h2 {
+            color: #feca57;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .winner-content .prize-name {
+            color: #48dbfb;
+            font-size: 1.3em;
+            margin-bottom: 25px;
+        }
+
+        .winner-content .winner-names {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .winner-content .winner-name {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            color: #c0392b;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 1.4em;
+            font-weight: bold;
+            animation: nameSlide 0.5s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes nameSlide {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .winner-content .close-hint {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9em;
+        }
+
         .settings-section {
             margin-bottom: 25px;
         }
