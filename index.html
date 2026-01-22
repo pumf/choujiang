@@ -246,12 +246,8 @@
             font-size: 12px;
             display: flex; align-items: center; justify-content: center;
         }
-        .red-packet.flip { animation: flipY 1.2s ease-in-out; }
-        @keyframes flipY {
-            0% { transform: rotateY(0deg); }
-            50% { transform: rotateY(180deg); }
-            100% { transform: rotateY(0deg); }
-        }
+        .red-packet { transition: transform 0.9s ease; }
+        .red-packet.is-flipped { transform: rotateY(180deg); }
 
         .red-packet::before {
             content: '';
@@ -1034,15 +1030,14 @@
             }
             container.innerHTML = people.map((person, index) => {
                 const won = !!person.prize;
-                // 未中奖：背面展示姓名，前面不显示姓名
-                // 已中奖：前面展示姓名 (仅姓名，不显示中奖文本)
+                // 未中奖：背面展示姓名，前面不显示姓名；已中奖：前面展示姓名
                 const frontContent = won
                     ? `<span class="name" style="font-size:0.75em">${person.name}</span>`
                     : `<span class="front-name" style="visibility:hidden"></span>`;
                 return `
                     <div class="red-packet ${won ? 'won' : ''}" onclick="showPersonInfo(${index})" title="${person.name}">
-                        <div class="front">${frontContent}</div>
-                        <div class="back"><span class="name">${person.name}</span></div>
+                        <div class="face front">${frontContent}</div>
+                        <div class="face back"><span class="name">${person.name}</span></div>
                     </div>
                 `;
             }).join('');
@@ -1109,14 +1104,14 @@
 
         // 随机给未中奖的红包加一个翻动效果，增加互动感
         function randomFlipNonWon() {
-            const candidates = Array.from(document.querySelectorAll('.red-packet:not(.won)'));
+            const candidates = Array.from(document.querySelectorAll('.red-packet:not(.won):not(.is-flipped)'));
             if (candidates.length === 0) return;
             const flipCount = 3 + Math.floor(Math.random() * 2); // 3 或 4
             for (let i = 0; i < flipCount; i++) {
                 const el = candidates[Math.floor(Math.random() * candidates.length)];
-                if (!el.classList.contains('flip')) {
-                    el.classList.add('flip');
-                    setTimeout(() => el.classList.remove('flip'), 1500);
+                if (!el.classList.contains('is-flipped')) {
+                    el.classList.add('is-flipped');
+                    setTimeout(() => el.classList.remove('is-flipped'), 1500);
                 }
             }
         }
