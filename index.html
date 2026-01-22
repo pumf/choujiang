@@ -811,23 +811,50 @@
             transition: all 0.5s ease 1s;
         }
 
-        .stop-btn {
-            left: calc(50% - 250px);
+        .ball-btn-container {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            opacity: 0;
+            transition: all 0.5s ease 1s;
+        }
+
+        .ball-container.active .ball-btn-container {
+            opacity: 1;
+        }
+
+        .ball-btn-container .stop-btn,
+        .ball-btn-container .cancel-btn {
+            position: static;
+            padding: 18px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ball-btn-container .stop-btn {
             background: linear-gradient(45deg, #1dd1a1, #10ac84);
             box-shadow: 0 5px 30px rgba(29, 209, 161, 0.4);
         }
 
-        .cancel-btn {
-            left: calc(50% + 50px);
+        .ball-btn-container .cancel-btn {
             background: linear-gradient(45deg, #ff6b6b, #ee5a5a);
             box-shadow: 0 5px 30px rgba(255, 107, 107, 0.4);
         }
 
-        .stop-btn:hover, .cancel-btn:hover {
+        .ball-btn-container .stop-btn:hover,
+        .ball-btn-container .cancel-btn:hover {
             transform: scale(1.05);
         }
 
-        .stop-btn:active, .cancel-btn:active {
+        .ball-btn-container .stop-btn:active,
+        .ball-btn-container .cancel-btn:active {
             transform: scale(0.95);
         }
 
@@ -885,8 +912,10 @@
 
     <div class="ball-container" id="ball-container">
         <div id="lottery-ball"></div>
-        <button class="stop-btn" id="stop-btn">🛑 停止抽奖</button>
-        <button class="cancel-btn" id="cancel-btn">❌ 取消</button>
+        <div class="ball-btn-container">
+            <button class="stop-btn" id="stop-btn">⏹ 停止并揭晓</button>
+            <button class="cancel-btn" id="cancel-btn">❌ 取消</button>
+        </div>
     </div>
 
     <div class="winner-modal" id="winner-modal">
@@ -1353,10 +1382,9 @@
             console.log('可用人员数量:', availablePeople.length);
             if (availablePeople.length === 0) { alert('没有可抽奖的人员了！'); return; }
 
+            // 隐藏主抽奖按钮
             const btn = document.getElementById('lottery-btn');
-            btn.disabled = true;
-            btn.textContent = '🎰 抽奖中...';
-            btn.classList.add('running');
+            btn.style.visibility = 'hidden';
 
             isLotteryRunning = true;
 
@@ -1403,14 +1431,56 @@
             slideLayer.innerHTML = '';
             slideLayer.style.pointerEvents = 'auto';
             
+            // 创建按钮容器（居中）
+            const btnContainer = document.createElement('div');
+            btnContainer.style.cssText = 'position:fixed;bottom:40px;left:50%;transform:translateX(-50%);display:flex;gap:20px;z-index:1001;';
+            slideLayer.appendChild(btnContainer);
+            
             // 创建停止按钮
             const stopBtn = document.createElement('button');
             stopBtn.id = 'slide-stop-btn';
             stopBtn.textContent = '⏹ 停止并揭晓';
-            stopBtn.style.cssText = 'position:fixed;bottom:30px;right:30px;padding:15px 30px;font-size:18px;font-weight:bold;background:linear-gradient(135deg, #e74c3c, #c0392b);color:#fff;border:none;border-radius:50px;cursor:pointer;z-index:1001;box-shadow:0 4px 15px rgba(231,76,60,0.4);transition:all 0.3s ease;';
+            stopBtn.style.cssText = 'padding:15px 35px;font-size:18px;font-weight:bold;background:linear-gradient(135deg, #1dd1a1, #10ac84);color:#fff;border:none;border-radius:50px;cursor:pointer;box-shadow:0 4px 15px rgba(29,209,161,0.4);transition:all 0.3s ease;';
             stopBtn.onmouseover = () => stopBtn.style.transform = 'scale(1.05)';
             stopBtn.onmouseout = () => stopBtn.style.transform = 'scale(1)';
-            slideLayer.appendChild(stopBtn);
+            btnContainer.appendChild(stopBtn);
+            
+            // 创建取消按钮
+            const cancelBtn = document.createElement('button');
+            cancelBtn.id = 'slide-cancel-btn';
+            cancelBtn.textContent = '❌ 取消';
+            cancelBtn.style.cssText = 'padding:15px 35px;font-size:18px;font-weight:bold;background:linear-gradient(135deg, #ff6b6b, #ee5a5a);color:#fff;border:none;border-radius:50px;cursor:pointer;box-shadow:0 4px 15px rgba(255,107,107,0.4);transition:all 0.3s ease;';
+            cancelBtn.onmouseover = () => cancelBtn.style.transform = 'scale(1.05)';
+            cancelBtn.onmouseout = () => cancelBtn.style.transform = 'scale(1)';
+            btnContainer.appendChild(cancelBtn);
+            
+            // 取消抽奖功能
+            window.cancelSlide = () => {
+                if (!sliding) return;
+                sliding = false;
+                clearInterval(slideInterval);
+                
+                // 清除所有高亮效果
+                if (lastHighlightedPacket && lastHighlightedPacket.element) {
+                    lastHighlightedPacket.element.classList.remove('slide-highlight');
+                }
+                packetRects.forEach(packet => {
+                    if (packet.element) {
+                        packet.element.classList.remove('slide-highlight');
+                    }
+                });
+                
+                // 清理滑动层
+                slideLayer.style.pointerEvents = 'none';
+                slideLayer.innerHTML = '';
+                
+                // 显示主抽奖按钮
+                const lotteryBtn = document.getElementById('lottery-btn');
+                lotteryBtn.style.visibility = 'visible';
+                isLotteryRunning = false;
+            };
+            
+            cancelBtn.onclick = window.cancelSlide;
             
             // 创建滑动方块
             const tileCount = Math.min(prize.count, availablePeople.length);
@@ -1525,6 +1595,7 @@
                         btn.disabled = false;
                         btn.textContent = '🎰 开始抽奖';
                         btn.classList.remove('running');
+                        btn.style.visibility = 'visible';
                         isLotteryRunning = false;
                     }, 300);
                 }, 500);
@@ -1548,6 +1619,7 @@
             if (count === 0) {
                 alert('没有可抽奖的人员了！');
                 container.classList.remove('active');
+                document.getElementById('lottery-btn').style.visibility = 'visible';
                 return;
             }
 
@@ -1632,6 +1704,7 @@
             btn.disabled = false;
             btn.textContent = '🎰 开始抽奖';
             btn.classList.remove('running');
+            btn.style.visibility = 'visible';
             isLotteryRunning = false;
         }
 
@@ -1650,6 +1723,7 @@
             btn.disabled = false;
             btn.textContent = '🎰 开始抽奖';
             btn.classList.remove('running');
+            btn.style.visibility = 'visible';
             isLotteryRunning = false;
         }
 
