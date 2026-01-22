@@ -1014,37 +1014,47 @@
         }
 
         function adjustPacketSize() {
+            // 目标：根据总数量动态分配红包大小，确保铺满墙面且相邻不重叠
             const container = document.getElementById('people-grid');
             if (!container || people.length === 0) return;
-            
-            const containerRect = container.getBoundingClientRect();
-            const count = people.length;
-            const gap = 15;
-            
-            const cols = Math.ceil(Math.sqrt(count * containerRect.width / containerRect.height));
-            const rows = Math.ceil(count / cols);
-            
-            const cellWidth = (containerRect.width - gap * (cols + 1)) / cols;
-            const cellHeight = (containerRect.height - gap * (rows + 1)) / rows;
-            const cellSize = Math.min(cellWidth, cellHeight);
-            
+
+            const W = container.clientWidth;
+            const H = container.clientHeight;
+            const N = people.length;
+            const gap = 15; // 红包之间的间距
+
+            // 穷举所有可能的列数，选择能让单个红包最大且能放下所有红包的组合
+            let best = { cols: 1, size: 40 };
+            for (let c = 1; c <= Math.min(N, 100); c++) {
+                const r = Math.ceil(N / c);
+                const sX = (W - (c + 1) * gap) / c;
+                const sY = (H - (r + 1) * gap) / r;
+                const s = Math.min(sX, sY);
+                if (s > best.size) best = { cols: c, size: s };
+            }
+            const cols = best.cols;
+            const cellSize = Math.max(20, best.size); // 防止过小
+
+            container.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+            container.style.gridColumnGap = `${gap}px`;
+            container.style.gridRowGap = `${gap}px`;
+            container.style.gap = '0';
+
             const packets = container.querySelectorAll('.red-packet');
             packets.forEach(p => {
                 p.style.width = cellSize + 'px';
                 p.style.height = cellSize + 'px';
-                p.style.margin = (gap / 2) + 'px';
                 p.style.borderRadius = Math.max(4, cellSize * 0.12) + 'px';
+                p.style.margin = '0';
             });
-            
-            container.style.gap = '0';
-            
-            const nameSize = Math.max(8, cellSize * 0.16);
+
+            // 调整内部文字和图形尺寸
+            const nameSize = Math.max(8, cellSize * 0.18);
             const circleSize = cellSize * 0.42;
             const fontSize = Math.max(10, cellSize * 0.32);
-            
-            const style = document.getElementById('packet-dynamic-styles');
-            if (style) style.remove();
-            
+
+            const existing = document.getElementById('packet-dynamic-styles');
+            if (existing) existing.remove();
             const styleEl = document.createElement('style');
             styleEl.id = 'packet-dynamic-styles';
             styleEl.textContent = `
