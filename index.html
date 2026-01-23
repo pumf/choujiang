@@ -1540,12 +1540,32 @@
                 stopBtn.disabled = true;
                 stopBtn.textContent = '⏳ 揭晓中...';
 
-                // 根据滑块停止的红包确定中奖者
+                // 根据滑块停止的实际位置确定中奖者
                 const winners = [];
                 tiles.forEach(tileObj => {
-                    if (tileObj.currentTarget && tileObj.currentTarget.id) {
-                        // 找到对应的人
-                        const winner = availablePeople.find(p => p.name === tileObj.currentTarget.id);
+                    // 获取滑块的实际位置
+                    const tileRect = tileObj.element.getBoundingClientRect();
+                    const tileCenterX = tileRect.left + tileRect.width / 2;
+                    const tileCenterY = tileRect.top + tileRect.height / 2;
+
+                    // 找到距离最近的红包
+                    let closestPacket = null;
+                    let minDistance = Infinity;
+
+                    packetRects.forEach(packet => {
+                        const distance = Math.sqrt(
+                            Math.pow(tileCenterX - packet.x, 2) +
+                            Math.pow(tileCenterY - packet.y, 2)
+                        );
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestPacket = packet;
+                        }
+                    });
+
+                    // 找到对应的人作为中奖者
+                    if (closestPacket && closestPacket.id) {
+                        const winner = availablePeople.find(p => p.name === closestPacket.id);
                         if (winner) {
                             winners.push(winner);
                         }
@@ -1567,9 +1587,26 @@
                 setTimeout(() => {
                     // 为每个中奖者找到对应的红包并显示结果
                     winners.forEach((winner, index) => {
-                        // 找到滑块最后停止的红包位置
+                        // 获取滑块的实际位置来确定对应的红包
                         const tileObj = tiles[index];
-                        const stoppedPacket = tileObj.currentTarget;
+                        const tileRect = tileObj.element.getBoundingClientRect();
+                        const tileCenterX = tileRect.left + tileRect.width / 2;
+                        const tileCenterY = tileRect.top + tileRect.height / 2;
+
+                        // 找到距离最近的红包
+                        let stoppedPacket = null;
+                        let minDistance = Infinity;
+
+                        packetRects.forEach(packet => {
+                            const distance = Math.sqrt(
+                                Math.pow(tileCenterX - packet.x, 2) +
+                                Math.pow(tileCenterY - packet.y, 2)
+                            );
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                stoppedPacket = packet;
+                            }
+                        });
 
                         // 高亮停止位置的红包为中奖红包
                         if (stoppedPacket && stoppedPacket.element) {
