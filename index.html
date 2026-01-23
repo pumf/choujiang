@@ -1539,6 +1539,9 @@
                 sliding = false;
                 clearInterval(slideInterval);
                 
+                stopBtn.disabled = true;
+                stopBtn.textContent = '⏳ 揭晓中...';
+
                 // 清除所有高亮效果
                 if (lastHighlightedPacket && lastHighlightedPacket.element) {
                     lastHighlightedPacket.element.classList.remove('slide-highlight');
@@ -1548,9 +1551,6 @@
                         packet.element.classList.remove('slide-highlight');
                     }
                 });
-                
-                stopBtn.disabled = true;
-                stopBtn.textContent = '⏳ 揭晓中...';
 
                 // 重新获取所有红包的当前位置（防止页面滚动等影响）
                 const currentPackets = wall.querySelectorAll('.red-packet:not(.won)');
@@ -1576,8 +1576,6 @@
                     const tileCenterX = tileRect.left + tileRect.width / 2;
                     const tileCenterY = tileRect.top + tileRect.height / 2;
 
-                    console.log(`Tile ${tileIndex}: center at (${tileCenterX.toFixed(0)}, ${tileCenterY.toFixed(0)})`);
-
                     // 找到距离最近的红包
                     let closestPacket = null;
                     let minDistance = Infinity;
@@ -1587,14 +1585,11 @@
                             Math.pow(tileCenterX - packet.x, 2) +
                             Math.pow(tileCenterY - packet.y, 2)
                         );
-                        console.log(`  Packet ${packetIndex}: (${packet.x.toFixed(0)}, ${packet.y.toFixed(0)}) - distance: ${distance.toFixed(0)}`);
                         if (distance < minDistance) {
                             minDistance = distance;
                             closestPacket = packet;
                         }
                     });
-
-                    console.log(`  Closest packet: ${closestPacket ? closestPacket.id : 'none'}, distance: ${minDistance.toFixed(0)}`);
 
                     // 记录这个滑块对应的红包
                     winnerPackets.push(closestPacket);
