@@ -1565,8 +1565,10 @@
                     });
                 });
 
-                // 根据滑块停止的实际位置确定中奖者
+                // 根据滑块停止的实际位置确定中奖者和对应的红包
                 const winners = [];
+                const winnerPackets = []; // 记录每个中奖者对应的红包
+
                 tiles.forEach(tileObj => {
                     // 获取滑块的实际位置
                     const tileRect = tileObj.element.getBoundingClientRect();
@@ -1588,7 +1590,8 @@
                         }
                     });
 
-                    // 找到对应的人作为中奖者
+                    // 记录对应的红包和中奖者
+                    winnerPackets.push(closestPacket);
                     if (closestPacket && closestPacket.id) {
                         const winner = availablePeople.find(p => p.name === closestPacket.id);
                         if (winner) {
@@ -1623,28 +1626,9 @@
                         });
                     });
 
-                    // 为每个中奖者找到对应的红包并显示结果
+                    // 为每个中奖者使用之前记录的红包显示结果
                     winners.forEach((winner, index) => {
-                        // 获取滑块的实际位置来确定对应的红包
-                        const tileObj = tiles[index];
-                        const tileRect = tileObj.element.getBoundingClientRect();
-                        const tileCenterX = tileRect.left + tileRect.width / 2;
-                        const tileCenterY = tileRect.top + tileRect.height / 2;
-
-                        // 找到距离最近的红包
-                        let stoppedPacket = null;
-                        let minDistance = Infinity;
-
-                        currentPacketRects.forEach(packet => {
-                            const distance = Math.sqrt(
-                                Math.pow(tileCenterX - packet.x, 2) +
-                                Math.pow(tileCenterY - packet.y, 2)
-                            );
-                            if (distance < minDistance) {
-                                minDistance = distance;
-                                stoppedPacket = packet;
-                            }
-                        });
+                        const stoppedPacket = winnerPackets[index];
 
                         // 高亮停止位置的红包为中奖红包
                         if (stoppedPacket && stoppedPacket.element) {
