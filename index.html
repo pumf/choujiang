@@ -1539,32 +1539,52 @@
                 
                 stopBtn.disabled = true;
                 stopBtn.textContent = '⏳ 揭晓中...';
-                
-                // 随机选择中奖者
-                const shuffled = [...availablePeople].sort(() => Math.random() - 0.5);
-                const winners = shuffled.slice(0, tileCount);
+
+                // 根据滑块停止的红包确定中奖者
+                const winners = [];
+                tiles.forEach(tileObj => {
+                    if (tileObj.currentTarget && tileObj.currentTarget.id) {
+                        // 找到对应的人
+                        const winner = availablePeople.find(p => p.name === tileObj.currentTarget.id);
+                        if (winner) {
+                            winners.push(winner);
+                        }
+                    }
+                });
+
+                // 如果没有找到足够的中奖者，用随机方式补充
+                while (winners.length < tileCount) {
+                    const availableForRandom = availablePeople.filter(p =>
+                        !winners.some(w => w.id === p.id)
+                    );
+                    if (availableForRandom.length === 0) break;
+
+                    const randomWinner = availableForRandom[Math.floor(Math.random() * availableForRandom.length)];
+                    winners.push(randomWinner);
+                }
                 
                 // 延迟后揭晓结果
                 setTimeout(() => {
-                    // 为每个方块显示目标位置的姓名
+                    // 为每个中奖者找到对应的红包并显示结果
                     winners.forEach((winner, index) => {
+                        // 找到滑块最后停止的红包位置
                         const tileObj = tiles[index];
-                        const target = tileObj.currentTarget || packetRects[index % packetRects.length];
-                        
-                        // 高亮目标红包
-                        if (target && target.element) {
-                            target.element.classList.add('won');
+                        const stoppedPacket = tileObj.currentTarget;
+
+                        // 高亮停止位置的红包为中奖红包
+                        if (stoppedPacket && stoppedPacket.element) {
+                            stoppedPacket.element.classList.add('won');
                             // 更新正面显示姓名和奖项
-                            const frontFace = target.element.querySelector('.front');
+                            const frontFace = stoppedPacket.element.querySelector('.front');
                             if (frontFace) {
                                 frontFace.innerHTML = `<span class="won-prize">${prize.name}</span><span class="won-name">${winner.name}</span>`;
                             }
                         }
-                        
+
                         // 更新方块显示
                         tileObj.element.innerHTML = `✅`;
                         tileObj.element.style.background = 'linear-gradient(145deg, #2ecc71, #27ae60)';
-                        
+
                         // 更新人员数据
                         const personIndex = people.findIndex(p => p.id === winner.id);
                         if (personIndex !== -1) {
