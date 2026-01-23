@@ -1570,7 +1570,7 @@
                 const winnerPackets = []; // 记录每个滑块对应的红包
 
                 // 为每个滑块找到最近的红包
-                tiles.forEach(tileObj => {
+                tiles.forEach((tileObj, tileIndex) => {
                     // 获取滑块的实际位置
                     const tileRect = tileObj.element.getBoundingClientRect();
                     const tileCenterX = tileRect.left + tileRect.width / 2;
@@ -1633,8 +1633,11 @@
                         }
 
                         // 更新方块显示
-                        tiles[index].element.innerHTML = `✅`;
-                        tiles[index].element.style.background = 'linear-gradient(145deg, #2ecc71, #27ae60)';
+                        const tileObj = tiles[index];
+                        if (tileObj && tileObj.element) {
+                            tileObj.element.innerHTML = `✅`;
+                            tileObj.element.style.background = 'linear-gradient(145deg, #2ecc71, #27ae60)';
+                        }
 
                         // 更新人员数据
                         const personIndex = people.findIndex(p => p.id === winner.id);
