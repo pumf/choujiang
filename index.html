@@ -1047,12 +1047,22 @@
             loadData();
             renderAll();
             initBgOptions();
-            initLotteryMode();
             document.getElementById('toggle-prize-btn').addEventListener('click', togglePrizePanel);
             document.getElementById('settings-btn').addEventListener('click', showSettings);
             document.getElementById('stop-btn').addEventListener('click', stopLottery);
             document.getElementById('cancel-btn').addEventListener('click', cancelLottery);
             document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
+
+            // 点击空白区域收起奖项列表
+            document.addEventListener('click', (e) => {
+                const prizePanel = document.getElementById('prize-panel');
+                const toggleBtn = document.getElementById('toggle-prize-btn');
+
+                // 如果点击的不是奖项面板内部，也不是切换按钮，则隐藏奖项面板
+                if (!prizePanel.contains(e.target) && e.target !== toggleBtn) {
+                    prizePanel.classList.remove('active');
+                }
+            });
         });
 
         function loadData() {
