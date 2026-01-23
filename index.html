@@ -1576,20 +1576,25 @@
                     const tileCenterX = tileRect.left + tileRect.width / 2;
                     const tileCenterY = tileRect.top + tileRect.height / 2;
 
+                    console.log(`Tile ${tileIndex}: center at (${tileCenterX.toFixed(0)}, ${tileCenterY.toFixed(0)})`);
+
                     // 找到距离最近的红包
                     let closestPacket = null;
                     let minDistance = Infinity;
 
-                    currentPacketRects.forEach(packet => {
+                    currentPacketRects.forEach((packet, packetIndex) => {
                         const distance = Math.sqrt(
                             Math.pow(tileCenterX - packet.x, 2) +
                             Math.pow(tileCenterY - packet.y, 2)
                         );
+                        console.log(`  Packet ${packetIndex}: (${packet.x.toFixed(0)}, ${packet.y.toFixed(0)}) - distance: ${distance.toFixed(0)}`);
                         if (distance < minDistance) {
                             minDistance = distance;
                             closestPacket = packet;
                         }
                     });
+
+                    console.log(`  Closest packet: ${closestPacket ? closestPacket.id : 'none'}, distance: ${minDistance.toFixed(0)}`);
 
                     // 记录这个滑块对应的红包
                     winnerPackets.push(closestPacket);
