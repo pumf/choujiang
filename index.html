@@ -1567,6 +1567,8 @@
 
                 // 简单逻辑：滑块最后停止在哪个红包上，哪个红包里的人就中奖
                 const winners = [];
+                const winnerPackets = []; // 记录每个滑块对应的红包
+
                 tiles.forEach(tileObj => {
                     // 获取滑块的实际位置
                     const tileRect = tileObj.element.getBoundingClientRect();
@@ -1587,6 +1589,9 @@
                             closestPacket = packet;
                         }
                     });
+
+                    // 记录这个滑块对应的红包
+                    winnerPackets.push(closestPacket);
 
                     // 这个红包里的人就是中奖者
                     if (closestPacket && closestPacket.id) {
@@ -1612,28 +1617,9 @@
                         });
                     });
 
-                    // 为每个中奖者找到对应的红包并显示结果
+                    // 为每个中奖者使用之前记录的红包显示结果
                     winners.forEach((winner, index) => {
-                        // 获取滑块的实际位置来确定对应的红包
-                        const tileObj = tiles[index];
-                        const tileRect = tileObj.element.getBoundingClientRect();
-                        const tileCenterX = tileRect.left + tileRect.width / 2;
-                        const tileCenterY = tileRect.top + tileRect.height / 2;
-
-                        // 找到距离最近的红包
-                        let stoppedPacket = null;
-                        let minDistance = Infinity;
-
-                        currentPacketRects.forEach(packet => {
-                            const distance = Math.sqrt(
-                                Math.pow(tileCenterX - packet.x, 2) +
-                                Math.pow(tileCenterY - packet.y, 2)
-                            );
-                            if (distance < minDistance) {
-                                minDistance = distance;
-                                stoppedPacket = packet;
-                            }
-                        });
+                        const stoppedPacket = winnerPackets[index];
 
                         // 高亮停止位置的红包为中奖红包
                         if (stoppedPacket && stoppedPacket.element) {
