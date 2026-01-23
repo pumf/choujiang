@@ -1507,26 +1507,28 @@
             // 滑动动画
             let sliding = true;
             let lastHighlightedPacket = null;
-            
+
             const slideInterval = setInterval(() => {
                 if (!sliding) return;
-                
+
                 tiles.forEach(tileObj => {
                     // 随机选择目标红包位置
                     const randomPacket = packetRects[Math.floor(Math.random() * packetRects.length)];
                     tileObj.currentTarget = randomPacket;
-                    
+
                     // 移除上一个高亮
                     if (lastHighlightedPacket && lastHighlightedPacket.element) {
                         lastHighlightedPacket.element.classList.remove('slide-highlight');
                     }
-                    
+
                     // 高亮当前红包
                     if (randomPacket.element) {
                         randomPacket.element.classList.add('slide-highlight');
                     }
                     lastHighlightedPacket = randomPacket;
-                    
+
+                    // 立即设置位置，没有transition动画
+                    tileObj.element.style.transition = 'none';
                     tileObj.element.style.transform = `translate3d(${randomPacket.x - 25}px, ${randomPacket.y - 25}px, 0)`;
                 });
             }, 80);
@@ -1550,6 +1552,19 @@
                 stopBtn.disabled = true;
                 stopBtn.textContent = '⏳ 揭晓中...';
 
+                // 重新获取所有红包的当前位置（防止页面滚动等影响）
+                const currentPackets = wall.querySelectorAll('.red-packet:not(.won)');
+                const currentPacketRects = [];
+                currentPackets.forEach(p => {
+                    const rect = p.getBoundingClientRect();
+                    currentPacketRects.push({
+                        element: p,
+                        x: rect.left + rect.width / 2,
+                        y: rect.top + rect.height / 2,
+                        id: p.querySelector('.name')?.textContent
+                    });
+                });
+
                 // 根据滑块停止的实际位置确定中奖者
                 const winners = [];
                 tiles.forEach(tileObj => {
@@ -1562,7 +1577,7 @@
                     let closestPacket = null;
                     let minDistance = Infinity;
 
-                    packetRects.forEach(packet => {
+                    currentPacketRects.forEach(packet => {
                         const distance = Math.sqrt(
                             Math.pow(tileCenterX - packet.x, 2) +
                             Math.pow(tileCenterY - packet.y, 2)
@@ -1595,6 +1610,19 @@
                 
                 // 延迟后揭晓结果
                 setTimeout(() => {
+                    // 重新获取所有红包的当前位置
+                    const currentPackets = wall.querySelectorAll('.red-packet:not(.won)');
+                    const currentPacketRects = [];
+                    currentPackets.forEach(p => {
+                        const rect = p.getBoundingClientRect();
+                        currentPacketRects.push({
+                            element: p,
+                            x: rect.left + rect.width / 2,
+                            y: rect.top + rect.height / 2,
+                            id: p.querySelector('.name')?.textContent
+                        });
+                    });
+
                     // 为每个中奖者找到对应的红包并显示结果
                     winners.forEach((winner, index) => {
                         // 获取滑块的实际位置来确定对应的红包
@@ -1607,7 +1635,7 @@
                         let stoppedPacket = null;
                         let minDistance = Infinity;
 
-                        packetRects.forEach(packet => {
+                        currentPacketRects.forEach(packet => {
                             const distance = Math.sqrt(
                                 Math.pow(tileCenterX - packet.x, 2) +
                                 Math.pow(tileCenterY - packet.y, 2)
