@@ -1565,84 +1565,37 @@
                     });
                 });
 
-                // 为每个滑块分配对应的红包和中奖者
-                const tileAssignments = []; // 记录每个滑块的分配结果
-
-                tiles.forEach((tileObj, tileIndex) => {
+                // 简单逻辑：滑块最后停止在哪个红包上，哪个红包里的人就中奖
+                const winners = [];
+                tiles.forEach(tileObj => {
                     // 获取滑块的实际位置
                     const tileRect = tileObj.element.getBoundingClientRect();
                     const tileCenterX = tileRect.left + tileRect.width / 2;
                     const tileCenterY = tileRect.top + tileRect.height / 2;
 
-                    // 找到距离最近的未分配红包
+                    // 找到距离最近的红包
                     let closestPacket = null;
                     let minDistance = Infinity;
 
                     currentPacketRects.forEach(packet => {
-                        // 检查这个红包是否已经被其他滑块分配
-                        const alreadyAssigned = tileAssignments.some(assignment =>
-                            assignment.packet && assignment.packet.element === packet.element
+                        const distance = Math.sqrt(
+                            Math.pow(tileCenterX - packet.x, 2) +
+                            Math.pow(tileCenterY - packet.y, 2)
                         );
-
-                        if (!alreadyAssigned) {
-                            const distance = Math.sqrt(
-                                Math.pow(tileCenterX - packet.x, 2) +
-                                Math.pow(tileCenterY - packet.y, 2)
-                            );
-                            if (distance < minDistance) {
-                                minDistance = distance;
-                                closestPacket = packet;
-                            }
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestPacket = packet;
                         }
                     });
 
-                    // 如果没有找到未分配的红包，找距离最近的（允许重复）
-                    if (!closestPacket) {
-                        currentPacketRects.forEach(packet => {
-                            const distance = Math.sqrt(
-                                Math.pow(tileCenterX - packet.x, 2) +
-                                Math.pow(tileCenterY - packet.y, 2)
-                            );
-                            if (distance < minDistance) {
-                                minDistance = distance;
-                                closestPacket = packet;
-                            }
-                        });
-                    }
-
-                    // 记录分配结果
-                    tileAssignments.push({
-                        tile: tileObj,
-                        packet: closestPacket,
-                        winner: closestPacket && closestPacket.id ?
-                            availablePeople.find(p => p.name === closestPacket.id) : null
-                    });
-                });
-
-                // 整理中奖者和对应的红包
-                const winners = [];
-                const winnerPackets = [];
-
-                tileAssignments.forEach(assignment => {
-                    winnerPackets.push(assignment.packet);
-                    if (assignment.winner) {
-                        winners.push(assignment.winner);
+                    // 这个红包里的人就是中奖者
+                    if (closestPacket && closestPacket.id) {
+                        const winner = availablePeople.find(p => p.name === closestPacket.id);
+                        if (winner) {
+                            winners.push(winner);
+                        }
                     }
                 });
-
-                // 如果有滑块没有找到对应的中奖者，用随机方式补充
-                while (winners.length < tileCount) {
-                    const availableForRandom = availablePeople.filter(p =>
-                        !winners.some(w => w.id === p.id)
-                    );
-                    if (availableForRandom.length === 0) break;
-
-                    const randomWinner = availableForRandom[Math.floor(Math.random() * availableForRandom.length)];
-                    winners.push(randomWinner);
-                    // 为随机中奖者分配一个随机的红包
-                    const randomPacket = currentPacketRects[Math.floor(Math.random() * currentPacketRects.length)];
-                    winnerPackets.push(randomPacket);
-                }
                 
                 // 延迟后揭晓结果
                 setTimeout(() => {
@@ -1659,9 +1612,28 @@
                         });
                     });
 
-                    // 为每个中奖者使用之前记录的红包显示结果
+                    // 为每个中奖者找到对应的红包并显示结果
                     winners.forEach((winner, index) => {
-                        const stoppedPacket = winnerPackets[index];
+                        // 获取滑块的实际位置来确定对应的红包
+                        const tileObj = tiles[index];
+                        const tileRect = tileObj.element.getBoundingClientRect();
+                        const tileCenterX = tileRect.left + tileRect.width / 2;
+                        const tileCenterY = tileRect.top + tileRect.height / 2;
+
+                        // 找到距离最近的红包
+                        let stoppedPacket = null;
+                        let minDistance = Infinity;
+
+                        currentPacketRects.forEach(packet => {
+                            const distance = Math.sqrt(
+                                Math.pow(tileCenterX - packet.x, 2) +
+                                Math.pow(tileCenterY - packet.y, 2)
+                            );
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                stoppedPacket = packet;
+                            }
+                        });
 
                         // 高亮停止位置的红包为中奖红包
                         if (stoppedPacket && stoppedPacket.element) {
