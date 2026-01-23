@@ -1569,26 +1569,21 @@
                 const winners = [];
                 const winnerPackets = []; // 记录每个滑块对应的红包
 
-                // 先获取滑块的最终位置
-                const tilePositions = tiles.map(tileObj => {
-                    const tileRect = tileObj.element.getBoundingClientRect();
-                    return {
-                        element: tileObj.element,
-                        centerX: tileRect.left + tileRect.width / 2,
-                        centerY: tileRect.top + tileRect.height / 2
-                    };
-                });
-
                 // 为每个滑块找到最近的红包
-                tilePositions.forEach(tilePos => {
+                tiles.forEach(tileObj => {
+                    // 获取滑块的实际位置
+                    const tileRect = tileObj.element.getBoundingClientRect();
+                    const tileCenterX = tileRect.left + tileRect.width / 2;
+                    const tileCenterY = tileRect.top + tileRect.height / 2;
+
                     // 找到距离最近的红包
                     let closestPacket = null;
                     let minDistance = Infinity;
 
                     currentPacketRects.forEach(packet => {
                         const distance = Math.sqrt(
-                            Math.pow(tilePos.centerX - packet.x, 2) +
-                            Math.pow(tilePos.centerY - packet.y, 2)
+                            Math.pow(tileCenterX - packet.x, 2) +
+                            Math.pow(tileCenterY - packet.y, 2)
                         );
                         if (distance < minDistance) {
                             minDistance = distance;
@@ -1638,11 +1633,8 @@
                         }
 
                         // 更新方块显示
-                        const tileObj = tiles[index];
-                        if (tileObj && tileObj.element) {
-                            tileObj.element.innerHTML = `✅`;
-                            tileObj.element.style.background = 'linear-gradient(145deg, #2ecc71, #27ae60)';
-                        }
+                        tiles[index].element.innerHTML = `✅`;
+                        tiles[index].element.style.background = 'linear-gradient(145deg, #2ecc71, #27ae60)';
 
                         // 更新人员数据
                         const personIndex = people.findIndex(p => p.id === winner.id);
