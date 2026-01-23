@@ -1641,8 +1641,8 @@
                         }
 
                         // 更新方块显示
-                        tileObj.element.innerHTML = `✅`;
-                        tileObj.element.style.background = 'linear-gradient(145deg, #2ecc71, #27ae60)';
+                        tiles[index].element.innerHTML = `✅`;
+                        tiles[index].element.style.background = 'linear-gradient(145deg, #2ecc71, #27ae60)';
 
                         // 更新人员数据
                         const personIndex = people.findIndex(p => p.id === winner.id);
