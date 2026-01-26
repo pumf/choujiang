@@ -224,12 +224,28 @@
             grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
             gap: 8px;
             padding: 10px;
-            overflow: hidden;
-            align-content: center;
+            overflow-y: auto;
+            overflow-x: hidden;
+            align-content: start;
         }
 
         .people-grid::-webkit-scrollbar {
-            display: none;
+            width: 6px;
+            height: 6px;
+        }
+
+        .people-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .people-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .people-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
 
         .red-packet { 
@@ -1056,6 +1072,25 @@
             padding: 10px;
         }
 
+        .history-list::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
         .history-item {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
@@ -1600,22 +1635,34 @@
          */
         function loadData() {
             try {
-                const savedData = localStorage.getItem('lotteryData');
-                if (savedData) {
-                    const data = JSON.parse(savedData);
-                    appState.people = data.people || [];
-                    appState.prizes = data.prizes || [];
-                    appState.history = data.history || [];
-                    appState.settings = { ...appState.settings, ...data.settings };
+                // 清理虚拟滚动
+                cleanupVirtualScroll();
+                
+                const data = localStorage.getItem('lotteryData');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    appState.people = parsed.people || [];
+                    appState.prizes = parsed.prizes || [];
+                    appState.history = parsed.history || [];
+                    appState.settings = parsed.settings || { title: '🎉 年会抽奖系统 🎊', background: 'gradient1' };
+                    appState.currentPrizeIndex = parsed.currentPrizeIndex || null;
                     
                     // 更新兼容性变量
                     people = appState.people;
                     prizes = appState.prizes;
                     history = appState.history;
                     settings = appState.settings;
+                    currentPrizeIndex = appState.currentPrizeIndex;
                     
-                    showToast('数据加载成功', 'success', 2000);
+                    // 应用设置
+                    document.body.className = settings.background;
+                    document.title = settings.title;
                 }
+            } catch (e) {
+                console.error('数据加载失败:', e);
+                showToast('数据加载失败：' + e.message, 'error');
+            }
+        }
             } catch (e) {
                 console.error('加载数据失败:', e);
                 showToast('数据加载失败：' + e.message, 'error', 5000);
@@ -1812,11 +1859,19 @@
         }
 
         function renderAll() {
-            renderTitle();
-            renderBg();
             renderPrizes();
             renderPeople();
-            initLotteryMode();
+            updateLotteryButton();
+            updateStopButton();
+            updateCancelButton();
+            
+            // 如果是虚拟滚动，重新计算可见项目
+            if (virtualScrollConfig.enabled && people.length >= 200) {
+                setTimeout(() => updateVirtualVisibleItems(), 100);
+            }
+            if (historyVirtualScrollConfig.enabled && appState.history.length >= 50) {
+                setTimeout(() => updateHistoryVirtualVisibleItems(), 100);
+            }
         }
 
         function renderTitle() {
@@ -1999,6 +2054,14 @@
         function renderPeople() {
             const container = document.getElementById('people-grid');
             
+            // 初始化虚拟滚动配置
+            if (!virtualScrollConfig.container) {
+                virtualScrollConfig.container = container;
+                virtualScrollConfig.items = people;
+            } else {
+                virtualScrollConfig.items = people;
+            }
+            
             // 清空容器
             while (container.firstChild) {
                 container.removeChild(container.firstChild);
@@ -2015,7 +2078,18 @@
                 return;
             }
 
-            // 使用 DocumentFragment 批量插入
+            // 如果数据量小于阈值，使用普通渲染
+            if (people.length < 200) {
+                renderPeopleNormal(container);
+                return;
+            }
+
+            // 使用虚拟滚动渲染
+            renderPeopleVirtual(container);
+        }
+
+        // 普通渲染（小数据量）
+        function renderPeopleNormal(container) {
             const fragment = document.createDocumentFragment();
 
             people.forEach((person, index) => {
@@ -2049,6 +2123,11 @@
 
             // 重新计算尺寸/布局
             setTimeout(() => adjustPacketSize(), 0);
+
+            // 如果是虚拟滚动，需要重新计算可见项目
+            if (virtualScrollConfig.enabled && people.length >= 200) {
+                updateVirtualVisibleItems();
+            }
         }
 
         function adjustPacketSize() {
@@ -2057,7 +2136,7 @@
             if (!container || people.length === 0) return;
 
             const W = container.clientWidth;
-            const H = container.clientHeight;
+            const H = people.length < 200 ? container.clientHeight : container.clientHeight * 2;
             const N = people.length;
             const gap = 15; // 红包之间的间距
 
@@ -2140,11 +2219,18 @@
 
         function showPersonInfo(index) {
             const person = people[index];
+            if (!person) return;
             alert(person.prize ? `${person.name}\n已中奖: ${person.prize}` : `${person.name}\n状态: 待抽奖`);
         }
 
         function togglePrizePanel() {
-            document.getElementById('prize-panel').classList.toggle('active');
+            const panel = document.getElementById('prize-panel');
+            panel.classList.toggle('active');
+            
+            // 如果是虚拟滚动，重新计算可见项目
+            if (virtualScrollConfig.enabled && people.length >= 200) {
+                setTimeout(() => updateVirtualVisibleItems(), 100);
+            }
         }
 
         function toggleFullscreen() {
@@ -2585,6 +2671,11 @@
         function closeWinnerModal() {
             const modal = document.getElementById('winner-modal');
             modal.classList.remove('active');
+            
+            // 如果是虚拟滚动，重新计算可见项目
+            if (virtualScrollConfig.enabled && people.length >= 200) {
+                setTimeout(() => updateVirtualVisibleItems(), 100);
+            }
         }
 
         /**
@@ -2602,6 +2693,17 @@
             panel.classList.toggle('active');
             if (panel.classList.contains('active')) {
                 renderHistory();
+                
+                // 如果是虚拟滚动，重新计算可见项目
+                if (historyVirtualScrollConfig.enabled && appState.history.length >= 50) {
+                    setTimeout(() => updateHistoryVirtualVisibleItems(), 100);
+                }
+            } else {
+                // 关闭时清理虚拟滚动事件监听器
+                if (historyVirtualScrollConfig.container) {
+                    historyVirtualScrollConfig.container.removeEventListener('scroll', handleHistoryVirtualScroll);
+                    historyVirtualScrollConfig.container = null;
+                }
             }
         }
 
@@ -2609,7 +2711,39 @@
         function closeHistoryPanel() {
             const panel = document.getElementById('history-panel');
             panel.classList.remove('active');
+            
+            // 清理虚拟滚动事件监听器
+            if (historyVirtualScrollConfig.container) {
+                historyVirtualScrollConfig.container.removeEventListener('scroll', handleHistoryVirtualScroll);
+                historyVirtualScrollConfig.container = null;
+            }
         }
+
+        // 虚拟滚动配置
+        const virtualScrollConfig = {
+            enabled: true, // 是否启用虚拟滚动
+            itemHeight: 68, // 每个项目的高度（包含间距）
+            buffer: 10, // 上下缓冲区数量
+            container: null, // 容器元素
+            items: [], // 所有项目数据
+            visibleItems: [], // 当前可见项目
+            scrollTop: 0, // 滚动位置
+            isScrolling: false, // 是否正在滚动
+            scrollTimeout: null // 滚动延迟
+        };
+
+        // 虚拟滚动配置（历史记录）
+        const historyVirtualScrollConfig = {
+            enabled: true,
+            itemHeight: 120,
+            buffer: 5,
+            container: null,
+            items: [],
+            visibleItems: [],
+            scrollTop: 0,
+            isScrolling: false,
+            scrollTimeout: null
+        };
 
         /**
          * 渲染历史记录列表
@@ -2636,8 +2770,29 @@
          * 
          * @returns {void}
          */
+        // 虚拟滚动配置（历史记录）
+        const historyVirtualScrollConfig = {
+            enabled: true,
+            itemHeight: 120,
+            buffer: 5,
+            container: null,
+            items: [],
+            visibleItems: [],
+            scrollTop: 0,
+            isScrolling: false,
+            scrollTimeout: null
+        };
+
         function renderHistory() {
             const container = document.getElementById('history-list');
+            
+            // 初始化虚拟滚动配置
+            if (!historyVirtualScrollConfig.container) {
+                historyVirtualScrollConfig.container = container;
+                historyVirtualScrollConfig.items = appState.history;
+            } else {
+                historyVirtualScrollConfig.items = appState.history;
+            }
             
             // 清空容器
             while (container.firstChild) {
@@ -2655,6 +2810,18 @@
                 return;
             }
 
+            // 如果数据量小于阈值，使用普通渲染
+            if (appState.history.length < 50) {
+                renderHistoryNormal(container);
+                return;
+            }
+
+            // 使用虚拟滚动渲染
+            renderHistoryVirtual(container);
+        }
+
+        // 普通渲染（小数据量）
+        function renderHistoryNormal(container) {
             const fragment = document.createDocumentFragment();
 
             appState.history.forEach((item, index) => {
@@ -2691,6 +2858,165 @@
                     const index = parseInt(e.target.dataset.index);
                     revokeWinner(index);
                 }
+            });
+
+            // 如果是虚拟滚动，需要重新计算可见项目
+            if (historyVirtualScrollConfig.enabled && appState.history.length >= 50) {
+                updateHistoryVirtualVisibleItems();
+            }
+        }
+
+        // 虚拟滚动渲染（大数据量）
+        function renderHistoryVirtual(container) {
+            // 设置容器高度以支持滚动
+            const totalHeight = appState.history.length * historyVirtualScrollConfig.itemHeight;
+            container.style.height = totalHeight + 'px';
+            container.style.position = 'relative';
+            container.style.overflowY = 'auto';
+
+            // 创建可见区域容器
+            const visibleContainer = document.createElement('div');
+            visibleContainer.className = 'virtual-visible-container';
+            visibleContainer.style.position = 'absolute';
+            visibleContainer.style.top = '0';
+            visibleContainer.style.left = '0';
+            visibleContainer.style.width = '100%';
+            visibleContainer.style.height = '100%';
+            container.appendChild(visibleContainer);
+
+            // 监听滚动事件
+            container.addEventListener('scroll', handleHistoryVirtualScroll);
+            
+            // 初始渲染
+            updateHistoryVirtualVisibleItems();
+        }
+
+        // 处理历史记录虚拟滚动
+        function handleHistoryVirtualScroll() {
+            historyVirtualScrollConfig.isScrolling = true;
+            historyVirtualScrollConfig.scrollTop = historyVirtualScrollConfig.container.scrollTop;
+
+            // 使用防抖优化性能
+            if (historyVirtualScrollConfig.scrollTimeout) {
+                clearTimeout(historyVirtualScrollConfig.scrollTimeout);
+            }
+
+            historyVirtualScrollConfig.scrollTimeout = setTimeout(() => {
+                updateHistoryVirtualVisibleItems();
+                historyVirtualScrollConfig.isScrolling = false;
+            }, 50);
+        }
+
+        // 更新历史记录可见项目
+        function updateHistoryVirtualVisibleItems() {
+            const container = historyVirtualScrollConfig.container;
+            const visibleContainer = container.querySelector('.virtual-visible-container');
+            if (!visibleContainer) return;
+
+            const scrollTop = container.scrollTop;
+            const containerHeight = container.clientHeight;
+            
+            // 计算可见范围
+            const startIndex = Math.max(0, Math.floor(scrollTop / historyVirtualScrollConfig.itemHeight) - historyVirtualScrollConfig.buffer);
+            const endIndex = Math.min(
+                historyVirtualScrollConfig.items.length - 1,
+                Math.ceil((scrollTop + containerHeight) / historyVirtualScrollConfig.itemHeight) + historyVirtualScrollConfig.buffer
+            );
+
+            // 清空可见容器
+            while (visibleContainer.firstChild) {
+                visibleContainer.removeChild(visibleContainer.firstChild);
+            }
+
+            // 创建可见项目
+            const fragment = document.createDocumentFragment();
+            
+            for (let i = startIndex; i <= endIndex; i++) {
+                const item = historyVirtualScrollConfig.items[i];
+                const time = new Date(item.time).toLocaleString('zh-CN');
+                const isRevoked = item.revoked;
+
+                const historyItem = document.createElement('div');
+                historyItem.className = `history-item ${isRevoked ? 'revoked' : ''}`;
+                
+                // 设置位置
+                historyItem.style.position = 'absolute';
+                historyItem.style.top = (i * historyVirtualScrollConfig.itemHeight) + 'px';
+                historyItem.style.left = '0';
+                historyItem.style.width = '100%';
+                historyItem.style.height = (historyVirtualScrollConfig.itemHeight - 10) + 'px';
+
+                historyItem.innerHTML = `
+                    <div class="history-item-header">
+                        <span class="history-item-prize">${item.prizeName}</span>
+                        <span class="history-item-time">${time}</span>
+                    </div>
+                    <div class="history-item-winners">
+                        <strong>中奖者：</strong>${item.winners.join('、')}
+                        ${isRevoked ? ' <span style="color:#ff6b6b;">(已撤销)</span>' : ''}
+                    </div>
+                    ${!isRevoked ? `
+                        <div class="history-item-actions">
+                            <button class="revoke-btn" data-index="${i}">撤销中奖</button>
+                        </div>
+                    ` : ''}
+                `;
+
+                fragment.appendChild(historyItem);
+            }
+
+            visibleContainer.appendChild(fragment);
+
+            // 重新计算尺寸/布局
+            setTimeout(() => adjustPacketSize(), 0);
+        }
+
+        // 清理虚拟滚动
+        function cleanupVirtualScroll() {
+            if (virtualScrollConfig.container) {
+                virtualScrollConfig.container.removeEventListener('scroll', handleVirtualScroll);
+                virtualScrollConfig.container = null;
+            }
+            if (virtualScrollConfig.scrollTimeout) {
+                clearTimeout(virtualScrollConfig.scrollTimeout);
+                virtualScrollConfig.scrollTimeout = null;
+            }
+            
+            if (historyVirtualScrollConfig.container) {
+                historyVirtualScrollConfig.container.removeEventListener('scroll', handleHistoryVirtualScroll);
+                historyVirtualScrollConfig.container = null;
+            }
+            if (historyVirtualScrollConfig.scrollTimeout) {
+                clearTimeout(historyVirtualScrollConfig.scrollTimeout);
+                historyVirtualScrollConfig.scrollTimeout = null;
+            }
+        }
+
+        // 虚拟滚动配置
+        const virtualScrollConfig = {
+            enabled: true, // 是否启用虚拟滚动
+            itemHeight: 68, // 每个项目的高度（包含间距）
+            buffer: 10, // 上下缓冲区数量
+            container: null, // 容器元素
+            items: [], // 所有项目数据
+            visibleItems: [], // 当前可见项目
+            scrollTop: 0, // 滚动位置
+            isScrolling: false, // 是否正在滚动
+            scrollTimeout: null // 滚动延迟
+        };
+
+        // 虚拟滚动配置（历史记录）
+        const historyVirtualScrollConfig = {
+            enabled: true,
+            itemHeight: 120,
+            buffer: 5,
+            container: null,
+            items: [],
+            visibleItems: [],
+            scrollTop: 0,
+            isScrolling: false,
+            scrollTimeout: null
+        };
             });
         }
 
@@ -3292,7 +3618,14 @@
         document.head.appendChild(style);
 
         function showSettings() { document.getElementById('settings-panel').classList.add('active'); }
-        function closeSettings() { document.getElementById('settings-panel').classList.remove('active'); }
+        function closeSettings() { 
+            document.getElementById('settings-panel').classList.remove('active');
+            
+            // 如果是虚拟滚动，重新计算可见项目
+            if (virtualScrollConfig.enabled && people.length >= 200) {
+                setTimeout(() => updateVirtualVisibleItems(), 100);
+            }
+        }
 
         function saveTitle() {
             const title = document.getElementById('setting-title').value.trim();
@@ -3428,6 +3761,9 @@
 
         function clearAll() {
             if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                // 清理虚拟滚动
+                cleanupVirtualScroll();
+                
                 appState.people = [];
                 appState.prizes = [];
                 appState.history = [];
