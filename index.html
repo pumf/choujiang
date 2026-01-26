@@ -1851,9 +1851,9 @@
         function renderAll() {
             renderPrizes();
             renderPeople();
-            updateLotteryButton();
-            updateStopButton();
-            updateCancelButton();
+            if (typeof updateLotteryButton === 'function') updateLotteryButton();
+            if (typeof updateStopButton === 'function') updateStopButton();
+            if (typeof updateCancelButton === 'function') updateCancelButton();
             
             // 如果是虚拟滚动，重新计算可见项目
             if (virtualScrollConfig.enabled && people.length >= 200) {
@@ -3630,7 +3630,9 @@
         function closeImportAllModal() { document.getElementById('import-all-modal').classList.remove('active'); }
 
         // 使用事件委托处理文件导入
-        document.getElementById('import-file').addEventListener('change', function(e) {
+        const importFileInput = document.getElementById('import-file');
+        if (importFileInput) {
+            importFileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -3655,10 +3657,13 @@
                 closeImportModal();
             };
             reader.readAsText(file);
-        });
+            });
+        }
 
         // 使用事件委托处理全部数据导入
-        document.getElementById('import-all-file').addEventListener('change', function(e) {
+        const importAllFileInput = document.getElementById('import-all-file');
+        if (importAllFileInput) {
+            importAllFileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -3678,7 +3683,8 @@
                 closeImportAllModal();
             };
             reader.readAsText(file);
-        });
+            });
+        }
 
         function exportData() {
             exportAll();
