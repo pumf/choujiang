@@ -1907,14 +1907,17 @@
 
         function initBgOptions() {
             // 使用事件委托优化背景选项点击
-            document.querySelector('.bg-options').addEventListener('click', (e) => {
-                const option = e.target.closest('.bg-option');
-                if (option) {
-                    settings.background = option.dataset.bg;
-                    saveData();
-                    renderBg();
-                }
-            });
+            const bgOptions = document.querySelector('.bg-options');
+            if (bgOptions) {
+                bgOptions.addEventListener('click', (e) => {
+                    const option = e.target.closest('.bg-option');
+                    if (option) {
+                        settings.background = option.dataset.bg;
+                        saveData();
+                        renderBg();
+                    }
+                });
+            }
         }
 
         function initLotteryMode() {
