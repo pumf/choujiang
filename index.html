@@ -1663,13 +1663,6 @@
                 showToast('数据加载失败：' + e.message, 'error');
             }
         }
-            } catch (e) {
-                console.error('加载数据失败:', e);
-                showToast('数据加载失败：' + e.message, 'error', 5000);
-                // 清空损坏的数据
-                localStorage.removeItem('lotteryData');
-            }
-        }
 
         /**
          * 保存数据到 LocalStorage
