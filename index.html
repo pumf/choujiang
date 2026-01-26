@@ -1558,6 +1558,9 @@
             document.addEventListener('touchmove', handleTouchMove, { passive: true });
             document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
+            // 键盘快捷键
+            document.addEventListener('keydown', handleKeyDown);
+
             // 检查是否需要备份
             setTimeout(() => checkBackupNeeded(), 3000);
 
@@ -2602,6 +2605,12 @@
             }
         }
 
+        // 关闭历史记录面板
+        function closeHistoryPanel() {
+            const panel = document.getElementById('history-panel');
+            panel.classList.remove('active');
+        }
+
         /**
          * 渲染历史记录列表
          * 
@@ -3518,6 +3527,193 @@
             document.body.className = settings.background;
             saveData();
             showToast(`已切换背景: ${newIndex + 1}/${backgrounds.length}`, 'info');
+        }
+
+        // 键盘快捷键处理
+        function handleKeyDown(e) {
+            // 如果在输入框中，不处理快捷键
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            // 阻止默认行为
+            e.preventDefault();
+
+            switch (e.key) {
+                case ' ':
+                case 'Enter':
+                    // 空格或回车 - 开始/停止抽奖
+                    if (isLotteryRunning) {
+                        stopLottery();
+                    } else {
+                        startLottery();
+                    }
+                    break;
+
+                case 'Escape':
+                    // ESC - 取消抽奖 / 关闭弹窗 / 关闭面板
+                    if (isLotteryRunning) {
+                        cancelLottery();
+                    } else {
+                        // 关闭所有面板和弹窗
+                        closeWinnerModal();
+                        closeSettings();
+                        closeHistoryPanel();
+                        closeBackupReminder();
+                        document.getElementById('prize-panel').classList.remove('active');
+                    }
+                    break;
+
+                case 'p':
+                case 'P':
+                    // P - 暂停/继续
+                    if (isLotteryRunning) {
+                        togglePause();
+                    }
+                    break;
+
+                case 'h':
+                case 'H':
+                    // H - 打开/关闭历史记录
+                    toggleHistoryPanel();
+                    break;
+
+                case 'r':
+                case 'R':
+                    // R - 刷新页面
+                    if (confirm('确定要刷新页面吗？未保存的数据可能会丢失。')) {
+                        location.reload();
+                    }
+                    break;
+
+                case 's':
+                case 'S':
+                    // S - 打开设置面板
+                    showSettings();
+                    break;
+
+                case 'f':
+                case 'F':
+                    // F - 切换全屏
+                    toggleFullscreen();
+                    break;
+
+                case 'ArrowUp':
+                    // 上箭头 - 切换上一个背景
+                    cycleBackground(-1);
+                    break;
+
+                case 'ArrowDown':
+                    // 下箭头 - 切换下一个背景
+                    cycleBackground(1);
+                    break;
+
+                case 'ArrowLeft':
+                    // 左箭头 - 关闭奖项面板
+                    document.getElementById('prize-panel').classList.remove('active');
+                    break;
+
+                case 'ArrowRight':
+                    // 右箭头 - 打开奖项面板
+                    document.getElementById('prize-panel').classList.add('active');
+                    break;
+
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    // 数字键 1-9 - 快速选择奖项
+                    const index = parseInt(e.key) - 1;
+                    if (prizes[index] && !prizes[index].awarded) {
+                        currentPrizeIndex = index;
+                        appState.currentPrizeIndex = index;
+                        saveData();
+                        renderPrizes();
+                        showToast(`已选择: ${prizes[index].name}`, 'info');
+                    }
+                    break;
+
+                case 'd':
+                case 'D':
+                    // D - 导出数据
+                    exportData();
+                    break;
+
+                case 'i':
+                case 'I':
+                    // I - 导入数据
+                    document.getElementById('import-file').click();
+                    break;
+
+                case 'e':
+                case 'E':
+                    // E - 导出全部数据
+                    exportAllData();
+                    break;
+
+                case 'c':
+                case 'C':
+                    // C - 清空数据
+                    if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                        clearAll();
+                    }
+                    break;
+
+                case 'm':
+                case 'M':
+                    // M - 切换抽奖模式
+                    if (!isLotteryRunning) {
+                        settings.lotteryMode = settings.lotteryMode === 'slide' ? 'ball' : 'slide';
+                        appState.settings.lotteryMode = settings.lotteryMode;
+                        saveData();
+                        showToast(`已切换到${settings.lotteryMode === 'slide' ? '方块滑动' : '3D球体'}模式`, 'info');
+                    }
+                    break;
+
+                case '?':
+                    // ? - 显示快捷键帮助
+                    showKeyboardShortcuts();
+                    break;
+            }
+        }
+
+        // 显示键盘快捷键帮助
+        function showKeyboardShortcuts() {
+            const shortcuts = `
+键盘快捷键帮助：
+
+抽奖操作：
+  空格/Enter - 开始/停止抽奖
+  P - 暂停/继续抽奖
+  ESC - 取消抽奖 / 关闭弹窗
+  M - 切换抽奖模式（球体/滑动）
+
+界面操作：
+  H - 打开/关闭历史记录
+  S - 打开设置面板
+  F - 切换全屏模式
+  R - 刷新页面
+  ? - 显示快捷键帮助
+
+导航操作：
+  ↑ - 切换上一个背景
+  ↓ - 切换下一个背景
+  ← - 关闭奖项面板
+  → - 打开奖项面板
+
+数据操作：
+  1-9 - 快速选择奖项
+  D - 导出配置数据
+  E - 导出全部数据
+  I - 导入数据
+  C - 清空数据
+            `;
+            showToast(shortcuts, 'info', 8000);
         }
 
         document.querySelectorAll('.settings-panel').forEach(panel => {
