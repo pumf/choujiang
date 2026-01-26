@@ -1395,9 +1395,9 @@
         <button class="pause-btn" id="pause-btn" onclick="togglePause()" style="display:none;">⏸ 暂停</button>
     </div>
 
-    <button class="settings-btn" id="settings-btn" onclick="showSettings()">⚙️</button>
-    <button class="fullscreen-btn" id="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
-    <button class="history-btn" id="history-btn" onclick="toggleHistoryPanel()">📜 历史记录</button>
+    <button class="settings-btn" id="settings-btn">⚙️</button>
+    <button class="fullscreen-btn" id="fullscreen-btn">⛶</button>
+    <button class="history-btn" id="history-btn">📜 历史记录</button>
 
     <div class="ball-container" id="ball-container">
         <div id="lottery-ball"></div>
@@ -1577,6 +1577,7 @@
             document.getElementById('stop-btn').addEventListener('click', stopLottery);
             document.getElementById('cancel-btn').addEventListener('click', cancelLottery);
             document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
+            document.getElementById('history-btn').addEventListener('click', toggleHistoryPanel);
 
             // 点击空白区域关闭奖项列表
             document.addEventListener('click', (e) => {
