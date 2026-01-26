@@ -1847,9 +1847,6 @@
                 }
             }
         }
-            };
-            localStorage.setItem('lotteryData', JSON.stringify(dataToSave));
-        }
 
         function renderAll() {
             renderPrizes();
@@ -1863,6 +1860,9 @@
                 setTimeout(() => updateVirtualVisibleItems(), 100);
             }
             if (historyVirtualScrollConfig.enabled && appState.history.length >= 50) {
+                setTimeout(() => updateHistoryVirtualVisibleItems(), 100);
+            }
+        }
                 setTimeout(() => updateHistoryVirtualVisibleItems(), 100);
             }
         }
