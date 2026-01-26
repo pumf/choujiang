@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年会抽奖系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .toggle-prize-btn {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            border: none;
+            border-radius: 0 10px 10px 0;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 100;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            letter-spacing: 3px;
+            box-shadow: 5px 0 20px rgba(255, 107, 107, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .toggle-prize-btn:hover {
+            width: 35px;
+            box-shadow: 8px 0 30px rgba(255, 107, 107, 0.6);
+        }
+
+        .prize-panel {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(30px);
+            padding: 20px;
+            z-index: 99;
+            transform: translateX(-100%);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .prize-panel.active {
+            transform: translateX(0);
+        }
+
+        .prize-panel h2 {
+            font-size: 1.3em;
+            color: #feca57;
+            margin-bottom: 15px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(254, 202, 87, 0.3);
+        }
+
+        .prize-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .prize-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ff6b6b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .prize-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .prize-item.active {
+            border-left-color: #feca57;
+            background: rgba(254, 202, 87, 0.15);
+        }
+
+        .prize-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .prize-item.unselectable {
+            opacity: 0.4;
+            cursor: not-allowed;
+            filter: grayscale(50%);
+        }
+
+        .prize-item .name {
+            font-size: 1em;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .prize-item .desc {
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 6px;
+        }
+
+        .prize-item .info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .prize-item .status {
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #1dd1a1, #10ac84);
+            font-size: 0.7em;
+        }
+
+        .prize-item .status.awarded {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a5a);
+        }
+
+        .main-content {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 30px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+
+        .people-area {
+            flex: 1;
+            width: 100%;
+            max-width: 1400px;
+            padding: 10px 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .people-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(1px, 1fr));
+            gap: 0;
+            padding: 0;
+            overflow: hidden;
+            align-content: stretch;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+
+        .title {
+            font-size: 2.2em;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #ff6b6b);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientMove 4s ease infinite;
+            text-shadow: 0 0 40px rgba(255, 107, 107, 0.3);
+            margin-bottom: 10px;
+        }
+
+        @keyframes gradientMove {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .people-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 8px;
+            padding: 10px;
+            overflow: hidden;
+            align-content: center;
+        }
+
+        .people-grid::-webkit-scrollbar {
+            display: none;
+        }
+
+        .red-packet { 
+            aspect-ratio: 1;
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+            position: relative;
+            border: none;
+        }
+
+        /* 3D flip faces: front/back */
+        .red-packet { transform-style: preserve-3d; }
+        .red-packet .front { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+        .front-prize { font-size: 0.8em; color: #fff; margin-bottom: 2px; }
+        .front-name { font-size: 0.7em; color: #fff; }
+        .front-prize { font-size: 0.8em; color: #fff; }
+        .red-packet .face {
+            position: absolute;
+            width: 100%; height: 100%;
+            backface-visibility: hidden;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: inherit;
+        }
+        .red-packet .front { }
+        .red-packet .back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, #1e1e1e, #111);
+            color: #fff;
+            font-size: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .red-packet { transition: transform 0.9s ease; }
+        .red-packet.is-flipped { transform: rotateY(180deg); }
+
+        .red-packet::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 45%;
+            height: 45%;
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            border-radius: 50%;
+        }
+
+        .red-packet::after {
+            content: '福';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #c0392b;
+            z-index: 1;
+        }
+
+        .red-packet .name {
+            position: absolute;
+            bottom: 8%;
+            left: 5%;
+            right: 5%;
+            text-align: center;
+            font-size: 0.65em;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            z-index: 2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .red-packet:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.6);
+        }
+
+        .red-packet.slide-highlight {
+            background: linear-gradient(145deg, #f1c40f, #f39c12) !important;
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.8);
+            transform: scale(1.1);
+        }
+
+        .red-packet.won {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.4);
+        }
+
+        .red-packet.won::before {
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+        }
+
+        .red-packet.won::after {
+            content: '中';
+            color: #fff;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9em;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .red-packet.won .front {
+            position: relative;
+        }
+
+        .red-packet.won .won-prize {
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.4em;
+            color: #c0392b;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90%;
+            text-align: center;
+            z-index: 2;
+        }
+
+        .red-packet.won .won-name {
+            position: absolute;
+            top: 72%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.45em;
+            color: #fff;
+            font-weight: bold;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90%;
+            text-align: center;
+            z-index: 2;
+        }
+
+        .lottery-btn {
+            padding: 12px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: #fff;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+            margin-top: 10px;
+        }
+
+        .lottery-btn:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.5);
+        }
+
+        .lottery-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .lottery-btn.running {
+            background: linear-gradient(45deg, #1dd1a1, #10ac84);
+            animation: pulse 0.8s ease infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { box-shadow: 0 10px 40px rgba(29, 209, 161, 0.4); }
+            to { box-shadow: 0 15px 70px rgba(29, 209, 161, 0.7); }
+        }
+
+        .settings-btn {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+
+        .settings-panel.active {
+            display: flex;
+        }
+
+        .settings-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .settings-content h2 {
+            color: #feca57;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .winner-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .winner-modal.active {
+            display: flex;
+        }
+
+        .winner-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+            animation: modalPop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .winner-content h2 {
+            color: #feca57;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .winner-content .prize-name {
+            color: #48dbfb;
+            font-size: 1.3em;
+            margin-bottom: 25px;
+        }
+
+        .winner-content .winner-names {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .winner-content .winner-name {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            color: #c0392b;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 1.4em;
+            font-weight: bold;
+            animation: nameSlide 0.5s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes nameSlide {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .winner-content .close-hint {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9em;
+        }
+
+        .settings-section {
+            margin-bottom: 25px;
+        }
+
+        .settings-section h3 {
+            color: #48dbfb;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .lottery-mode-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mode-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .mode-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .mode-option input[type="radio"] {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .mode-option input[type="radio"]:checked + .mode-label {
+            color: #feca57;
+        }
+
+        .mode-option:has(input:checked) {
+            border-color: #feca57;
+            background: rgba(254, 202, 87, 0.1);
+        }
+
+        .mode-label {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .mode-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85em;
+        }
+
+        .settings-section input, .settings-section textarea {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .settings-section input:focus, .settings-section textarea:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary { background: linear-gradient(45deg, #ff6b6b, #feca57); }
+        .btn-secondary { background: linear-gradient(45deg, #48dbfb, #0abde3); }
+        .btn-danger { background: linear-gradient(45deg, #ff6b6b, #ee5a5a); }
+        .btn-success { background: linear-gradient(45deg, #1dd1a1, #10ac84); }
+
+        .btn:hover { transform: translateY(-2px); }
+
+        .close-settings {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2em;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-settings:hover { transform: rotate(90deg); }
+
+        .bg-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .bg-option {
+            height: 45px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+
+        .bg-option.active {
+            border-color: #feca57;
+        }
+
+        .file-upload {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 15px 0;
+        }
+
+        .file-upload:hover {
+            border-color: #feca57;
+            background: rgba(254, 202, 87, 0.1);
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .ball-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            perspective: 1200px;
+        }
+
+        .ball-container.active {
+            display: flex;
+        }
+
+        #lottery-ball {
+            width: 850px;
+            height: 850px;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes rotateY {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        .ball-item {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ball-item::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            border-radius: 50%;
+        }
+
+        .ball-item::after {
+            content: '福';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 16px;
+            font-weight: bold;
+            color: #c0392b;
+            z-index: 1;
+        }
+
+        .ball-item .name {
+            position: absolute;
+            bottom: 4px;
+            left: 2px;
+            right: 2px;
+            text-align: center;
+            font-size: 9px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            z-index: 2;
+        }
+
+        .ball-item.gather {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+        }
+
+        .ball-item.highlight {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            box-shadow: 0 0 35px rgba(254, 202, 87, 0.9);
+            z-index: 1000;
+        }
+
+        .fullscreen-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .stop-btn, .cancel-btn {
+            position: absolute;
+            bottom: 60px;
+            padding: 18px 45px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .ball-container.active .stop-btn,
+        .ball-container.active .cancel-btn {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.5s ease 1s;
+        }
+
+        .ball-btn-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            opacity: 0;
+            transition: all 0.5s ease 1s;
+        }
+
+        .ball-container.active .ball-btn-container {
+            opacity: 1;
+        }
+
+        .ball-btn-container .stop-btn,
+        .ball-btn-container .cancel-btn {
+            position: static;
+            padding: 18px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ball-btn-container .stop-btn {
+            background: linear-gradient(45deg, #1dd1a1, #10ac84);
+            box-shadow: 0 5px 30px rgba(29, 209, 161, 0.4);
+        }
+
+        .ball-btn-container .cancel-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a5a);
+            box-shadow: 0 5px 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .ball-btn-container .stop-btn:hover,
+        .ball-btn-container .cancel-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .ball-btn-container .stop-btn:active,
+        .ball-btn-container .cancel-btn:active {
+            transform: scale(0.95);
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .empty-state .icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .title { font-size: 1.8em; }
+            .lottery-btn { padding: 10px 30px; font-size: 1.1em; }
+            .people-grid { grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)); grid-auto-rows: minmax(50px, 1fr); }
+            .prize-panel { width: 260px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-overlay" id="bg-overlay"></div>
+    <button class="toggle-prize-btn" id="toggle-prize-btn">奖项列表</button>
+
+    <div class="prize-panel" id="prize-panel">
+        <h2>🏆 奖项列表</h2>
+        <div class="prize-list" id="prize-list">
+            <div class="empty-state">
+                <div class="icon">🏆</div>
+                <p>暂无奖项</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <h1 class="title" id="lottery-title">🎉 年会抽奖系统 🎊</h1>
+
+        <div class="people-area">
+            <div class="people-grid" id="people-grid">
+                <div class="empty-state">
+                    <div class="icon">👥</div>
+                    <p>暂无人员，请在设置中添加</p>
+                </div>
+            </div>
+        </div>
+
+        <button class="lottery-btn" id="lottery-btn" onclick="startLottery()">🎰 开始抽奖</button>
+    </div>
+
+    <button class="settings-btn" id="settings-btn" onclick="showSettings()">⚙️</button>
+    <button class="fullscreen-btn" id="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
+
+    <div class="ball-container" id="ball-container">
+        <div id="lottery-ball"></div>
+        <div class="ball-btn-container">
+            <button class="stop-btn" id="stop-btn">⏹ 停止并揭晓</button>
+            <button class="cancel-btn" id="cancel-btn">❌ 取消</button>
+        </div>
+    </div>
+
+    <div class="winner-modal" id="winner-modal">
+        <div class="winner-content">
+            <h2 id="winner-title">🎉 恭喜中奖 🎉</h2>
+            <div class="prize-name" id="winner-prize"></div>
+            <div class="winner-names" id="winner-names"></div>
+            <div class="close-hint">点击任意位置关闭</div>
+        </div>
+    </div>
+
+    <div id="fireworks-container"></div>
+
+    <div class="settings-panel" id="settings-panel">
+        <span class="close-settings" onclick="closeSettings()">&times;</span>
+        <div class="settings-content">
+            <h2>⚙️ 系统设置</h2>
+
+            <div class="settings-section">
+                <h3>📝 标题设置</h3>
+                <input type="text" id="setting-title" placeholder="输入抽奖标题">
+                <button class="btn btn-primary" onclick="saveTitle()">保存标题</button>
+            </div>
+
+            <div class="settings-section">
+                <h3>🎲 抽奖方式</h3>
+                <div class="lottery-mode-options">
+                    <label class="mode-option">
+                        <input type="radio" name="lotteryMode" value="sphere" onchange="saveLotteryMode(this.value)">
+                        <span class="mode-label">🔮 3D球体旋转</span>
+                        <span class="mode-desc">经典3D球体抽奖效果</span>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="lotteryMode" value="slide" onchange="saveLotteryMode(this.value)">
+                        <span class="mode-label">🎯 方块滑动</span>
+                        <span class="mode-desc">红包墙方块随机滑动抽取</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>🎨 背景设置</h3>
+                <div class="bg-options">
+                    <div class="bg-option active" data-bg="gradient1" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);"></div>
+                    <div class="bg-option" data-bg="gradient2" style="background: linear-gradient(135deg, #0f4037 0%, #195047 50%, #0f4037 100%);"></div>
+                    <div class="bg-option" data-bg="gradient3" style="background: linear-gradient(135deg, #4a1a1a 0%, #3d1a1a 50%, #2a0f0f 100%);"></div>
+                    <div class="bg-option" data-bg="gradient4" style="background: linear-gradient(135deg, #1a2a4a 0%, #1a2040 50%, #0f1a2a 100%);"></div>
+                </div>
+                <div class="file-upload" onclick="document.getElementById('bg-file').click()" style="margin-top:15px;">
+                    <input type="file" id="bg-file" accept="image/*" onchange="uploadBgImage(event)">
+                    <p>📷 上传本地背景图片</p>
+                    <p style="font-size:12px;color:rgba(255,255,255,0.5)">支持 jpg、png、gif</p>
+                </div>
+                <button class="btn btn-secondary" onclick="clearBgImage()" style="margin-top:10px;">清除背景图片</button>
+            </div>
+
+            <div class="settings-section">
+                <h3>🏆 奖项管理</h3>
+                <input type="text" id="setting-prize-name" placeholder="奖项名称">
+                <input type="text" id="setting-prize-desc" placeholder="奖品描述">
+                <div style="display:flex;gap:10px;margin-bottom:10px;">
+                    <input type="number" id="setting-prize-count" value="1" min="1" placeholder="人数" style="flex:1;">
+                    <input type="color" id="setting-prize-color" value="#ff6b6b" style="width:50px;height:42px;padding:2px;border-radius:8px;cursor:pointer;">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="addPrizeFromSettings()">添加奖项</button>
+                    <button class="btn btn-secondary" onclick="clearPrizes()">清空奖项</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>👥 人员管理</h3>
+                <textarea id="add-people-text" rows="4" placeholder="每行一个姓名"></textarea>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="addPeople()">添加人员</button>
+                    <button class="btn btn-secondary" onclick="showImportModal()">导入</button>
+                    <button class="btn btn-success" onclick="exportPeople()">导出</button>
+                    <button class="btn btn-danger" onclick="clearPeople()">清空</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>💾 数据管理</h3>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="exportAll()">导出全部</button>
+                    <button class="btn btn-secondary" onclick="showImportAllModal()">导入全部</button>
+                    <button class="btn btn-danger" onclick="clearAll()">清空所有</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-panel" id="import-modal">
+        <span class="close-settings" onclick="closeImportModal()">&times;</span>
+        <div class="settings-content">
+            <h3>导入人员</h3>
+            <div class="file-upload" onclick="document.getElementById('import-file').click()">
+                <input type="file" id="import-file" accept=".txt,.csv,.json">
+                <p>点击选择文件</p>
+                <p style="font-size:12px;color:rgba(255,255,255,0.5)">支持 txt、csv、json</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-panel" id="import-all-modal">
+        <span class="close-settings" onclick="closeImportAllModal()">&times;</span>
+        <div class="settings-content">
+            <h3>导入全部配置</h3>
+            <div class="file-upload" onclick="document.getElementById('import-all-file').click()">
+                <input type="file" id="import-all-file" accept=".json">
+                <p>点击选择配置文件</p>
+                <p style="font-size:12px;color:rgba(255,255,255,0.5)">仅支持 json 格式</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let people = [];
+        let prizes = [];
+        let history = [];
+        let settings = { title: '🎉 年会抽奖系统 🎊', background: 'gradient1', lotteryMode: 'sphere' };
+        let currentPrizeIndex = null;
+        let isLotteryRunning = false;
+        let animationId = null;
+        let currentAnimationData = null;
+        let flipIntervalId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            renderAll();
+            initBgOptions();
+            document.getElementById('toggle-prize-btn').addEventListener('click', togglePrizePanel);
+            document.getElementById('settings-btn').addEventListener('click', showSettings);
+            document.getElementById('stop-btn').addEventListener('click', stopLottery);
+            document.getElementById('cancel-btn').addEventListener('click', cancelLottery);
+            document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
+
+            // 点击空白区域收起奖项列表
+            document.addEventListener('click', (e) => {
+                const prizePanel = document.getElementById('prize-panel');
+                const toggleBtn = document.getElementById('toggle-prize-btn');
+
+                // 如果点击的不是奖项面板内部，也不是切换按钮，则隐藏奖项面板
+                if (!prizePanel.contains(e.target) && e.target !== toggleBtn) {
+                    prizePanel.classList.remove('active');
+                }
+            });
+        });
+
+        function loadData() {
+            const savedData = localStorage.getItem('lotteryData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                people = data.people || [];
+                prizes = data.prizes || [];
+                history = data.history || [];
+                settings = { ...settings, ...data.settings };
+            }
+        }
+
+        function saveData() {
+            const dataToSave = {
+                people,
+                prizes,
+                history,
+                settings: {
+                    title: settings.title,
+                    background: settings.background || 'gradient1',
+                    lotteryMode: settings.lotteryMode || 'sphere'
+                }
+            };
+            localStorage.setItem('lotteryData', JSON.stringify(dataToSave));
+        }
+
+        function renderAll() {
+            renderTitle();
+            renderBg();
+            renderPrizes();
+            renderPeople();
+            initLotteryMode();
+        }
+
+        function renderTitle() {
+            document.getElementById('lottery-title').textContent = settings.title;
+            document.getElementById('setting-title').value = settings.title.replace(/🎉|🎊/g, '').trim();
+        }
+
+        function renderBg() {
+            document.body.style.background = getBgStyle(settings.background);
+            document.querySelectorAll('.bg-option').forEach(el => {
+                el.classList.toggle('active', el.dataset.bg === settings.background);
+            });
+        }
+
+        function uploadBgImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.querySelector('.main-content').style.backgroundImage = `url(${e.target.result})`;
+                document.getElementById('bg-overlay').style.background = 'rgba(0, 0, 0, 0.3)';
+                alert('背景图片已设置（仅当前会话有效）');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearBgImage() {
+            document.querySelector('.main-content').style.backgroundImage = 'none';
+            document.getElementById('bg-overlay').style.background = 'rgba(0, 0, 0, 0.5)';
+            alert('背景图片已清除');
+        }
+
+        function getBgStyle(bg) {
+            const styles = {
+                gradient1: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+                gradient2: 'linear-gradient(135deg, #0f4037 0%, #195047 50%, #0f4037 100%)',
+                gradient3: 'linear-gradient(135deg, #4a1a1a 0%, #3d1a1a 50%, #2a0f0f 100%)',
+                gradient4: 'linear-gradient(135deg, #1a2a4a 0%, #1a2040 50%, #0f1a2a 100%)'
+            };
+            return styles[bg] || styles.gradient1;
+        }
+
+        function initBgOptions() {
+            document.querySelectorAll('.bg-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    settings.background = option.dataset.bg;
+                    saveData();
+                    renderBg();
+                });
+            });
+        }
+
+        function initLotteryMode() {
+            const mode = settings.lotteryMode || 'sphere';
+            const radio = document.querySelector(`input[name="lotteryMode"][value="${mode}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        function saveLotteryMode(mode) {
+            settings.lotteryMode = mode;
+            saveData();
+        }
+
+        function renderStats() {
+            const total = people.length;
+            const won = people.filter(p => p.prize).length;
+            document.getElementById('total-count').textContent = total;
+            document.getElementById('won-count').textContent = won;
+            document.getElementById('remain-count').textContent = total - won;
+        }
+
+        function renderPrizes() {
+            const container = document.getElementById('prize-list');
+            if (prizes.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">🏆</div><p>暂无奖项</p></div>';
+                return;
+            }
+            
+            const firstUnawardedIndex = prizes.findIndex(p => !p.awarded);
+            
+            container.innerHTML = prizes.map((prize, index) => {
+                const winners = people.filter(p => p.prize === prize.name);
+                const isClickable = !prize.awarded && (index === firstUnawardedIndex || currentPrizeIndex === index);
+                return `
+                <div class="prize-item ${prize.awarded ? 'disabled' : ''} ${!isClickable && !prize.awarded ? 'unselectable' : ''} ${currentPrizeIndex === index ? 'active' : ''}"
+                     onclick="isClickable ? selectPrize(${index}) : null" style="border-left-color: ${prize.color}">
+                    <div class="name" style="color: ${prize.color}">${prize.name}</div>
+                    <div class="desc">${prize.desc}</div>
+                    <div class="info">
+                        <span>👤 ${prize.count}人</span>
+                        <span class="status ${prize.awarded ? 'awarded' : ''}">${prize.awarded ? '已抽取' : '待抽取'}</span>
+                    </div>
+                    ${winners.length > 0 ? `<div class="desc" style="margin-top:8px;color:#feca57;">中奖: ${winners.map(w => w.name).join('、')}</div>` : ''}
+                </div>
+            `;
+            }).join('');
+        }
+
+        function selectPrize(index) {
+            if (prizes[index].awarded) return;
+            if (currentPrizeIndex === index) {
+                currentPrizeIndex = null;
+            } else {
+                currentPrizeIndex = index;
+            }
+            renderPrizes();
+        }
+
+        function renderPeople() {
+            const container = document.getElementById('people-grid');
+            if (people.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>暂无人员，请在设置中添加</p></div>';
+                return;
+            }
+            container.innerHTML = people.map((person, index) => {
+                const won = !!person.prize;
+                const frontContent = won
+                    ? `<span class="won-prize">${person.prize}</span><span class="won-name">${person.name}</span>`
+                    : `<span class="front-name" style="visibility:hidden"></span>`;
+                return `
+                    <div class="red-packet ${won ? 'won' : ''}" onclick="showPersonInfo(${index})" title="${person.name}">
+                        <div class="face front">${frontContent}</div>
+                        <div class="face back"><span class="name">${person.name}</span></div>
+                    </div>
+                `;
+            }).join('');
+            // 重新计算尺寸/布局
+            setTimeout(() => adjustPacketSize(), 0);
+        }
+
+        function adjustPacketSize() {
+            // 目标：根据总数量动态分配红包大小，确保铺满墙面且相邻不重叠
+            const container = document.getElementById('people-grid');
+            if (!container || people.length === 0) return;
+
+            const W = container.clientWidth;
+            const H = container.clientHeight;
+            const N = people.length;
+            const gap = 15; // 红包之间的间距
+
+            // 穷举所有可能的列数，选择能让单个红包最大且能放下所有红包的组合
+            let best = { cols: 1, size: 40 };
+            for (let c = 1; c <= Math.min(N, 100); c++) {
+                const r = Math.ceil(N / c);
+                const sX = (W - (c + 1) * gap) / c;
+                const sY = (H - (r + 1) * gap) / r;
+                const s = Math.min(sX, sY);
+                if (s > best.size) best = { cols: c, size: s };
+            }
+            const cols = best.cols;
+            const cellSize = Math.max(20, best.size); // 防止过小
+
+            container.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+            container.style.gridColumnGap = `${gap}px`;
+            container.style.gridRowGap = `${gap}px`;
+
+            const packets = container.querySelectorAll('.red-packet');
+            packets.forEach(p => {
+                p.style.width = cellSize + 'px';
+                p.style.height = cellSize + 'px';
+                p.style.borderRadius = Math.max(4, cellSize * 0.12) + 'px';
+                p.style.margin = '0';
+            });
+
+            // 调整内部文字和图形尺寸
+            const nameSize = Math.max(8, cellSize * 0.18);
+            const circleSize = cellSize * 0.42;
+            const fontSize = Math.max(10, cellSize * 0.32);
+            const wonPrizeSize = Math.max(6, cellSize * 0.14);
+            const wonNameSize = Math.max(7, cellSize * 0.16);
+
+            const existing = document.getElementById('packet-dynamic-styles');
+            if (existing) existing.remove();
+            const styleEl = document.createElement('style');
+            styleEl.id = 'packet-dynamic-styles';
+            styleEl.textContent = `
+                .red-packet::before { width: ${circleSize}px !important; height: ${circleSize}px !important; }
+                .red-packet::after { font-size: ${fontSize}px !important; }
+                .red-packet .name { font-size: ${nameSize}px !important; bottom: ${cellSize * 0.06}px !important; }
+                .red-packet.won .won-prize { font-size: ${wonPrizeSize}px !important; }
+                .red-packet.won .won-name { font-size: ${wonNameSize}px !important; }
+            `;
+            document.head.appendChild(styleEl);
+        }
+
+        window.addEventListener('resize', () => {
+            if (people.length > 0) {
+                setTimeout(adjustPacketSize, 100);
+            }
+        });
+
+        // 随机给未中奖的红包加一个翻动效果，增加互动感
+        function randomFlipNonWon() {
+            if (isLotteryRunning) return;
+            const candidates = Array.from(document.querySelectorAll('.red-packet:not(.won):not(.is-flipped)'));
+            if (candidates.length === 0) return;
+            const flipCount = 3 + Math.floor(Math.random() * 2); // 3 或 4
+            for (let i = 0; i < flipCount; i++) {
+                const el = candidates[Math.floor(Math.random() * candidates.length)];
+                if (!el.classList.contains('is-flipped')) {
+                    el.classList.add('is-flipped');
+                    setTimeout(() => el.classList.remove('is-flipped'), 1500);
+                }
+            }
+        }
+        // 调整翻动节奏：稍慢一些，数量也增多
+        flipIntervalId = setInterval(randomFlipNonWon, 1800);
+
+        function showPersonInfo(index) {
+            const person = people[index];
+            alert(person.prize ? `${person.name}\n已中奖: ${person.prize}` : `${person.name}\n状态: 待抽奖`);
+        }
+
+        function togglePrizePanel() {
+            document.getElementById('prize-panel').classList.toggle('active');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function addPrize() {
+            const name = document.getElementById('prize-name').value.trim();
+            const desc = document.getElementById('prize-desc').value.trim();
+            const count = parseInt(document.getElementById('prize-count').value);
+            const color = document.getElementById('prize-color').value;
+
+            if (!name) { alert('请输入奖项名称'); return; }
+
+            prizes.push({ id: Date.now(), name, desc, count, color, awarded: false });
+            saveData();
+            renderPrizes();
+
+            document.getElementById('prize-name').value = '';
+            document.getElementById('prize-desc').value = '';
+            document.getElementById('prize-count').value = '1';
+        }
+
+        function addPrizeFromSettings() {
+            const name = document.getElementById('setting-prize-name').value.trim();
+            const desc = document.getElementById('setting-prize-desc').value.trim();
+            const count = parseInt(document.getElementById('setting-prize-count').value);
+            const color = document.getElementById('setting-prize-color').value;
+
+            if (!name) { alert('请输入奖项名称'); return; }
+
+            const duplicatePrize = prizes.find(p => p.name.toLowerCase() === name.toLowerCase());
+            if (duplicatePrize) {
+                alert('奖项名称已存在，请使用其他名称');
+                return;
+            }
+
+            prizes.push({ id: Date.now(), name, desc, count, color, awarded: false });
+            saveData();
+            renderPrizes();
+
+            document.getElementById('setting-prize-name').value = '';
+            document.getElementById('setting-prize-desc').value = '';
+            document.getElementById('setting-prize-count').value = '1';
+            alert('奖项添加成功');
+        }
+
+        function clearPrizes() {
+            if (confirm('确定要清空所有奖项吗？中奖记录将一并清除')) {
+                prizes = [];
+                people.forEach(p => p.prize = null);
+                currentPrizeIndex = null;
+                saveData();
+                renderAll();
+            }
+        }
+
+        function startLottery() {
+            console.log('开始抽奖按钮被点击');
+            let prize;
+            let prizeIndex;
+            if (currentPrizeIndex !== null) {
+                prize = prizes[currentPrizeIndex];
+                prizeIndex = currentPrizeIndex;
+            } else {
+                const availablePrizes = prizes.filter(p => !p.awarded);
+                console.log('可用奖项数量:', availablePrizes.length);
+                if (availablePrizes.length === 0) { alert('所有奖项都已抽取完毕！'); return; }
+                prizeIndex = prizes.findIndex(p => !p.awarded);
+                prize = prizes[prizeIndex];
+            }
+
+            const availablePeople = people.filter(p => !p.prize);
+            console.log('可用人员数量:', availablePeople.length);
+            if (availablePeople.length === 0) { alert('没有可抽奖的人员了！'); return; }
+
+            // 隐藏主抽奖按钮
+            const btn = document.getElementById('lottery-btn');
+            btn.style.visibility = 'hidden';
+
+            isLotteryRunning = true;
+
+            console.log('抽奖模式切换:', settings.lotteryMode);
+            if (settings.lotteryMode === 'slide') {
+                showSlideAnimation(availablePeople, prize);
+            } else {
+                showGatherAnimation(availablePeople, prize);
+            }
+        }
+
+        function showSlideAnimation(availablePeople, prize) {
+            // 方块滑动抽奖模式
+            const wall = document.getElementById('people-grid');
+            const wallRect = wall.getBoundingClientRect();
+            const cols = Math.max(3, Math.floor(wallRect.width / 60));
+            
+            // 获取所有红包位置
+            const packets = wall.querySelectorAll('.red-packet:not(.won)');
+            const packetRects = [];
+            packets.forEach(p => {
+                const rect = p.getBoundingClientRect();
+                packetRects.push({
+                    element: p,
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2,
+                    id: p.querySelector('.name')?.textContent
+                });
+            });
+            
+            if (packetRects.length === 0) {
+                alert('没有可抽奖的人员了！');
+                return;
+            }
+            
+            // 创建滑动层
+            let slideLayer = document.getElementById('slide-layer');
+            if (!slideLayer) {
+                slideLayer = document.createElement('div');
+                slideLayer.id = 'slide-layer';
+                slideLayer.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1000;';
+                document.body.appendChild(slideLayer);
+            }
+            slideLayer.innerHTML = '';
+            slideLayer.style.pointerEvents = 'auto';
+            
+            // 创建按钮容器（居中）
+            const btnContainer = document.createElement('div');
+            btnContainer.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:20px;z-index:1001;';
+            slideLayer.appendChild(btnContainer);
+            
+            // 创建停止按钮
+            const stopBtn = document.createElement('button');
+            stopBtn.id = 'slide-stop-btn';
+            stopBtn.textContent = '⏹ 停止并揭晓';
+            stopBtn.style.cssText = 'padding:15px 35px;font-size:18px;font-weight:bold;background:linear-gradient(135deg, #1dd1a1, #10ac84);color:#fff;border:none;border-radius:50px;cursor:pointer;box-shadow:0 4px 15px rgba(29,209,161,0.4);transition:all 0.3s ease;';
+            stopBtn.onmouseover = () => stopBtn.style.transform = 'scale(1.05)';
+            stopBtn.onmouseout = () => stopBtn.style.transform = 'scale(1)';
+            btnContainer.appendChild(stopBtn);
+            
+            // 创建取消按钮
+            const cancelBtn = document.createElement('button');
+            cancelBtn.id = 'slide-cancel-btn';
+            cancelBtn.textContent = '❌ 取消';
+            cancelBtn.style.cssText = 'padding:15px 35px;font-size:18px;font-weight:bold;background:linear-gradient(135deg, #ff6b6b, #ee5a5a);color:#fff;border:none;border-radius:50px;cursor:pointer;box-shadow:0 4px 15px rgba(255,107,107,0.4);transition:all 0.3s ease;';
+            cancelBtn.onmouseover = () => cancelBtn.style.transform = 'scale(1.05)';
+            cancelBtn.onmouseout = () => cancelBtn.style.transform = 'scale(1)';
+            btnContainer.appendChild(cancelBtn);
+            
+            // 取消抽奖功能
+            window.cancelSlide = () => {
+                if (!sliding) return;
+                sliding = false;
+                clearInterval(slideInterval);
+                
+                // 清除所有高亮效果
+                if (lastHighlightedPacket && lastHighlightedPacket.element) {
+                    lastHighlightedPacket.element.classList.remove('slide-highlight');
+                }
+                packetRects.forEach(packet => {
+                    if (packet.element) {
+                        packet.element.classList.remove('slide-highlight');
+                    }
+                });
+                
+                // 清理滑动层
+                slideLayer.style.pointerEvents = 'none';
+                slideLayer.innerHTML = '';
+                
+                // 显示主抽奖按钮
+                const lotteryBtn = document.getElementById('lottery-btn');
+                lotteryBtn.style.visibility = 'visible';
+                isLotteryRunning = false;
+            };
+            
+            cancelBtn.onclick = window.cancelSlide;
+            
+            // 创建滑动方块
+            const tileCount = Math.min(prize.count, availablePeople.length);
+            const tiles = [];
+            for (let i = 0; i < tileCount; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'slide-tile';
+                tile.style.cssText = 'position:fixed;width:50px;height:50px;background:linear-gradient(145deg, #ffd700, #ff8c00);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#c0392b;font-size:14px;box-shadow:0 4px 15px rgba(255,215,0,0.5);z-index:1000;transform:translate3d(-100px,-100px,0);transition:transform 0.1s ease;';
+                tile.innerHTML = '🎯';
+                slideLayer.appendChild(tile);
+                tiles.push({ element: tile, currentTarget: null });
+            }
+            
+            // 滑动动画
+            let sliding = true;
+            let lastHighlightedPacket = null;
+
+            const slideInterval = setInterval(() => {
+                if (!sliding) return;
+
+                tiles.forEach(tileObj => {
+                    // 随机选择目标红包位置
+                    const randomPacket = packetRects[Math.floor(Math.random() * packetRects.length)];
+                    tileObj.currentTarget = randomPacket;
+
+                    // 移除上一个高亮
+                    if (lastHighlightedPacket && lastHighlightedPacket.element) {
+                        lastHighlightedPacket.element.classList.remove('slide-highlight');
+                    }
+
+                    // 高亮当前红包
+                    if (randomPacket.element) {
+                        randomPacket.element.classList.add('slide-highlight');
+                    }
+                    lastHighlightedPacket = randomPacket;
+
+                    // 立即设置位置，没有transition动画
+                    tileObj.element.style.transition = 'none';
+                    tileObj.element.style.transform = `translate3d(${randomPacket.x - 25}px, ${randomPacket.y - 25}px, 0)`;
+                });
+            }, 80);
+            
+            // 停止并揭晓
+            window.stopSlide = () => {
+                if (!sliding) return;
+                sliding = false;
+                clearInterval(slideInterval);
+                
+                stopBtn.disabled = true;
+                stopBtn.textContent = '⏳ 揭晓中...';
+
+                // 清除所有高亮效果
+                if (lastHighlightedPacket && lastHighlightedPacket.element) {
+                    lastHighlightedPacket.element.classList.remove('slide-highlight');
+                }
+                packetRects.forEach(packet => {
+                    if (packet.element) {
+                        packet.element.classList.remove('slide-highlight');
+                    }
+                });
+
+                // 重新获取所有红包的当前位置（防止页面滚动等影响）
+                const currentPackets = wall.querySelectorAll('.red-packet:not(.won)');
+                const currentPacketRects = [];
+                currentPackets.forEach(p => {
+                    const rect = p.getBoundingClientRect();
+                    currentPacketRects.push({
+                        element: p,
+                        x: rect.left + rect.width / 2,
+                        y: rect.top + rect.height / 2,
+                        id: p.querySelector('.name')?.textContent
+                    });
+                });
+
+                // 简单逻辑：滑块最后停止在哪个红包上，哪个红包里的人就中奖
+                const winners = [];
+                const winnerPackets = []; // 记录每个滑块对应的红包
+
+                // 为每个滑块找到最近的红包
+                tiles.forEach((tileObj, tileIndex) => {
+                    // 获取滑块的实际位置
+                    const tileRect = tileObj.element.getBoundingClientRect();
+                    const tileCenterX = tileRect.left + tileRect.width / 2;
+                    const tileCenterY = tileRect.top + tileRect.height / 2;
+
+                    // 找到距离最近的红包
+                    let closestPacket = null;
+                    let minDistance = Infinity;
+
+                    currentPacketRects.forEach((packet, packetIndex) => {
+                        const distance = Math.sqrt(
+                            Math.pow(tileCenterX - packet.x, 2) +
+                            Math.pow(tileCenterY - packet.y, 2)
+                        );
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestPacket = packet;
+                        }
+                    });
+
+                    // 记录这个滑块对应的红包
+                    winnerPackets.push(closestPacket);
+
+                    // 这个红包里的人就是中奖者
+                    if (closestPacket && closestPacket.id) {
+                        const winner = availablePeople.find(p => p.name === closestPacket.id);
+                        if (winner) {
+                            winners.push(winner);
+                        }
+                    }
+                });
+                
+                // 延迟后揭晓结果
+                setTimeout(() => {
+                    // 重新获取所有红包的当前位置
+                    const currentPackets = wall.querySelectorAll('.red-packet:not(.won)');
+                    const currentPacketRects = [];
+                    currentPackets.forEach(p => {
+                        const rect = p.getBoundingClientRect();
+                        currentPacketRects.push({
+                            element: p,
+                            x: rect.left + rect.width / 2,
+                            y: rect.top + rect.height / 2,
+                            id: p.querySelector('.name')?.textContent
+                        });
+                    });
+
+                    // 为每个中奖者使用之前记录的红包显示结果
+                    winners.forEach((winner, index) => {
+                        const stoppedPacket = winnerPackets[index];
+
+                        // 高亮停止位置的红包为中奖红包
+                        if (stoppedPacket && stoppedPacket.element) {
+                            stoppedPacket.element.classList.add('won');
+                            // 更新正面显示姓名和奖项
+                            const frontFace = stoppedPacket.element.querySelector('.front');
+                            if (frontFace) {
+                                frontFace.innerHTML = `<span class="won-prize">${prize.name}</span><span class="won-name">${winner.name}</span>`;
+                            }
+                        }
+
+                        // 更新方块显示
+                        const tileObj = tiles[index];
+                        if (tileObj && tileObj.element) {
+                            tileObj.element.innerHTML = `✅`;
+                            tileObj.element.style.background = 'linear-gradient(145deg, #2ecc71, #27ae60)';
+                        }
+
+                        // 更新人员数据
+                        const personIndex = people.findIndex(p => p.id === winner.id);
+                        if (personIndex !== -1) {
+                            people[personIndex].prize = prize.name;
+                        }
+                    });
+                    
+                    // 标记奖项已发放
+                    prize.awarded = true;
+                    currentPrizeIndex = null;
+                    
+                    // 保存数据
+                    saveData();
+                    
+                    // 显示中奖弹窗
+                    setTimeout(() => {
+                        renderAll();
+                        showWinners(prize, winners);
+                        
+                        // 清理滑动层
+                        setTimeout(() => {
+                            slideLayer.style.pointerEvents = 'none';
+                            slideLayer.innerHTML = '';
+                        }, 500);
+                        
+                        // 重置按钮状态
+                        const btn = document.getElementById('lottery-btn');
+                        btn.disabled = false;
+                        btn.textContent = '🎰 开始抽奖';
+                        btn.classList.remove('running');
+                        btn.style.visibility = 'visible';
+                        isLotteryRunning = false;
+                    }, 300);
+                }, 500);
+            };
+            
+            // 绑定停止按钮
+            stopBtn.onclick = window.stopSlide;
+        }
+
+        function showGatherAnimation(availablePeople, prize) {
+            const container = document.getElementById('ball-container');
+            const ball = document.getElementById('lottery-ball');
+            container.classList.add('active');
+            ball.innerHTML = '';
+            ball.style.animation = 'none';
+            ball.style.transform = 'rotateY(0deg)';
+
+            currentAnimationData = { availablePeople, prize };
+
+            const count = availablePeople.length;
+            if (count === 0) {
+                alert('没有可抽奖的人员了！');
+                container.classList.remove('active');
+                document.getElementById('lottery-btn').style.visibility = 'visible';
+                return;
+            }
+
+            const radius = 380;
+            const phi = Math.PI * (3 - Math.sqrt(5));
+
+            for (let i = 0; i < count; i++) {
+                const y = 1 - (i / (count - 1)) * 2;
+                const radiusAtY = Math.sqrt(1 - y * y);
+                const theta = phi * i;
+
+                const x = Math.cos(theta) * radiusAtY * radius;
+                const z = Math.sin(theta) * radiusAtY * radius;
+
+                const item = document.createElement('div');
+                item.className = 'ball-item gather';
+                item.innerHTML = `<span class="name">${availablePeople[i].name}</span>`;
+                item.dataset.theta = theta;
+                item.dataset.yPos = y * radius;
+                ball.appendChild(item);
+            }
+
+            setTimeout(() => {
+                const items = ball.querySelectorAll('.ball-item');
+                items.forEach((item, idx) => {
+                    const x = parseFloat(Math.cos(item.dataset.theta) * Math.sqrt(1 - Math.pow(item.dataset.yPos / radius, 2)) * radius);
+                    const y = parseFloat(item.dataset.yPos);
+                    const z = parseFloat(Math.sin(item.dataset.theta) * Math.sqrt(1 - Math.pow(item.dataset.yPos / radius, 2)) * radius);
+                    const theta = parseFloat(item.dataset.theta);
+
+                    const angleX = 90;
+                    const angleY = theta * (180 / Math.PI);
+
+                    item.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateX(${angleX}deg) rotateY(${angleY}deg)`;
+                });
+            }, 50);
+
+            setTimeout(() => {
+                ball.style.animation = 'rotateY 2s linear infinite';
+            }, 1000);
+        }
+
+        function stopLottery() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            const ball = document.getElementById('lottery-ball');
+            ball.style.animation = 'none';
+
+            const { availablePeople, prize } = currentAnimationData;
+            const winnerCount = Math.min(prize.count, availablePeople.length);
+            const shuffled = [...availablePeople].sort(() => Math.random() - 0.5);
+            const winners = shuffled.slice(0, winnerCount);
+
+            winners.forEach(winner => {
+                const index = people.findIndex(p => p.id === winner.id);
+                if (index !== -1) people[index].prize = prize.name;
+            });
+
+            prize.awarded = true;
+            history.unshift({
+                prizeName: prize.name,
+                prizeDesc: prize.desc,
+                winners: winners.map(w => w.name),
+                time: new Date().toISOString()
+            });
+
+            saveData();
+            currentPrizeIndex = null;
+            renderAll();
+
+            document.getElementById('ball-container').classList.remove('active');
+
+            setTimeout(() => {
+                showWinners(prize, winners);
+                launchFireworks();
+            }, 300);
+
+            const btn = document.getElementById('lottery-btn');
+            btn.disabled = false;
+            btn.textContent = '🎰 开始抽奖';
+            btn.classList.remove('running');
+            btn.style.visibility = 'visible';
+            isLotteryRunning = false;
+        }
+
+        function cancelLottery() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            const ball = document.getElementById('lottery-ball');
+            ball.style.animation = 'none';
+
+            document.getElementById('ball-container').classList.remove('active');
+
+            const btn = document.getElementById('lottery-btn');
+            btn.disabled = false;
+            btn.textContent = '🎰 开始抽奖';
+            btn.classList.remove('running');
+            btn.style.visibility = 'visible';
+            isLotteryRunning = false;
+        }
+
+        function showWinners(prize, winners) {
+            const modal = document.getElementById('winner-modal');
+            document.getElementById('winner-prize').textContent = `【${prize.name}】${prize.desc}`;
+            document.getElementById('winner-names').innerHTML = winners.map(w =>
+                `<div class="winner-name">${w.name}</div>`
+            ).join('');
+            modal.classList.add('active');
+        }
+
+        document.getElementById('winner-modal').addEventListener('click', () => {
+            document.getElementById('winner-modal').classList.remove('active');
+        });
+
+        function launchFireworks() {
+            const container = document.getElementById('fireworks-container');
+            const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#1dd1a1', '#ff6ff3'];
+
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => createFirework(container, colors), i * 100);
+            }
+        }
+
+        function createFirework(container, colors) {
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight * 0.6;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            const center = document.createElement('div');
+            center.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:8px;height:8px;background:${color};border-radius:50%;`;
+            container.appendChild(center);
+
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                const angle = (Math.PI * 2 / 30) * i;
+                const velocity = 80 + Math.random() * 120;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+
+                particle.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:6px;height:6px;background:${color};border-radius:50%;animation:fireworkParticle 1s ease-out forwards;--tx:${tx}px;--ty:${ty}px;`;
+                container.appendChild(particle);
+            }
+
+            setTimeout(() => {
+                center.remove();
+                container.querySelectorAll('[style*="fireworkParticle"]').forEach(p => p.remove());
+            }, 1000);
+        }
+
+        const style = document.createElement('style');
+        style.textContent = '@keyframes fireworkParticle {0%{transform:translate(0,0);opacity:1}100%{transform:translate(var(--tx),var(--ty));opacity:0}}';
+        document.head.appendChild(style);
+
+        function showSettings() { document.getElementById('settings-panel').classList.add('active'); }
+        function closeSettings() { document.getElementById('settings-panel').classList.remove('active'); }
+
+        function saveTitle() {
+            const title = document.getElementById('setting-title').value.trim();
+            settings.title = `🎉 ${title} 🎊`;
+            saveData();
+            renderTitle();
+            alert('标题已保存');
+        }
+
+        function addPeople() {
+            const text = document.getElementById('add-people-text').value.trim();
+            if (!text) { alert('请输入姓名'); return; }
+            const names = text.split('\n').map(n => n.trim()).filter(n => n);
+            
+            const existingNames = new Set(people.map(p => p.name.toLowerCase()));
+            const uniqueNames = names.filter(n => !existingNames.has(n.toLowerCase()));
+            const duplicateNames = names.filter(n => existingNames.has(n.toLowerCase()));
+            
+            if (uniqueNames.length === 0) {
+                alert('所有姓名都已存在');
+                return;
+            }
+            
+            const newPeople = uniqueNames.map(name => ({ id: Date.now() + Math.random(), name, prize: null }));
+            people = [...people, ...newPeople];
+            saveData();
+            renderAll();
+            document.getElementById('add-people-text').value = '';
+            
+            let msg = `成功添加 ${newPeople.length} 名人员`;
+            if (duplicateNames.length > 0) {
+                msg += `\n跳过重复姓名: ${duplicateNames.join('、')}`;
+            }
+            alert(msg);
+        }
+
+        function clearPeople() {
+            if (confirm('确定要清空所有人员吗？')) {
+                people = [];
+                saveData();
+                renderAll();
+            }
+        }
+
+        function exportPeople() {
+            downloadFile(people.map(p => p.name).join('\n'), '人员名单.txt', 'text/plain');
+        }
+
+        function showImportModal() { document.getElementById('import-modal').classList.add('active'); }
+        function closeImportModal() { document.getElementById('import-modal').classList.remove('active'); }
+        function showImportAllModal() { document.getElementById('import-all-modal').classList.add('active'); }
+        function closeImportAllModal() { document.getElementById('import-all-modal').classList.remove('active'); }
+
+        document.getElementById('import-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const content = ev.target.result;
+                    let names = [];
+                    if (file.name.endsWith('.json')) {
+                        const data = JSON.parse(content);
+                        names = Array.isArray(data) ? data.map(item => typeof item === 'string' ? item : item.name) : [];
+                    } else {
+                        names = content.split('\n').map(l => l.trim()).filter(l => l);
+                    }
+                    const newPeople = names.map(name => ({ id: Date.now() + Math.random(), name, prize: null }));
+                    people = [...people, ...newPeople];
+                    saveData();
+                    renderAll();
+                    alert(`成功导入 ${newPeople.length} 名人员`);
+                } catch (err) { alert('文件格式错误'); }
+                closeImportModal();
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('import-all-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    people = data.people || [];
+                    prizes = data.prizes || [];
+                    history = data.history || [];
+                    settings = data.settings || settings;
+                    saveData();
+                    renderAll();
+                    alert('配置导入成功');
+                } catch (err) { alert('配置文件格式错误'); }
+                closeImportAllModal();
+            };
+            reader.readAsText(file);
+        });
+
+        function exportAll() {
+            const data = {
+                people,
+                prizes,
+                history,
+                settings: {
+                    title: settings.title,
+                    background: settings.background,
+                    lotteryMode: settings.lotteryMode
+                },
+                exportTime: new Date().toISOString()
+            };
+            downloadFile(JSON.stringify(data, null, 2), '抽奖系统配置.json', 'application/json');
+        }
+
+        function clearAll() {
+            if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                people = [];
+                prizes = [];
+                history = [];
+                settings = { title: '🎉 年会抽奖系统 🎊', background: 'gradient1' };
+                currentPrizeIndex = null;
+                saveData();
+                renderAll();
+                closeSettings();
+            }
+        }
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        document.querySelectorAll('.settings-panel').forEach(panel => {
+            panel.addEventListener('click', (e) => {
+                if (e.target === panel) panel.classList.remove('active');
+            });
+        });
+    // showWinnersModal moved inside script
+    function showWinnersModal(prize, winners) {
+        const modal = document.getElementById('winner-modal');
+        if (!modal) {
+            alert('中奖: ' + winners.map(w => w.name).join(', '));
+            return;
+        }
+        modal.classList.add('active');
+        const content = modal.querySelector('.winner-content');
+        if (content) {
+            const prizeNameEl = content.querySelector('.prize-name');
+            if (prizeNameEl) prizeNameEl.textContent = prize.name;
+            const namesEl = content.querySelector('.winner-names');
+            if (namesEl) namesEl.innerHTML = winners.map(w => `<div class="winner-name">${w.name}</div>`).join('');
+        }
+    }
+    </script>
+    </body>
+    </html>
