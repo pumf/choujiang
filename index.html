@@ -3565,9 +3565,13 @@
         style.textContent = '@keyframes fireworkParticle {0%{transform:translate(0,0);opacity:1}100%{transform:translate(var(--tx),var(--ty));opacity:0}}';
         document.head.appendChild(style);
 
-        function showSettings() { document.getElementById('settings-panel').classList.add('active'); }
+        function showSettings() { 
+            const panel = document.getElementById('settings-panel');
+            if (panel) panel.classList.add('active');
+        }
         function closeSettings() { 
-            document.getElementById('settings-panel').classList.remove('active');
+            const panel = document.getElementById('settings-panel');
+            if (panel) panel.classList.remove('active');
             
             // 如果是虚拟滚动，重新计算可见项目
             if (virtualScrollConfig.enabled && people.length >= 200) {
