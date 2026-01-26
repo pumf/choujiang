@@ -1571,6 +1571,7 @@
             renderAll();
             initBgOptions();
             initLotteryMode();
+            // 使用事件委托优化按钮点击
             document.getElementById('toggle-prize-btn').addEventListener('click', togglePrizePanel);
             document.getElementById('settings-btn').addEventListener('click', showSettings);
             document.getElementById('stop-btn').addEventListener('click', stopLottery);
@@ -1606,7 +1607,6 @@
                     e.returnValue = '抽奖正在进行中，确定要离开吗？';
                 }
             });
-        });
         });
 
         /**
@@ -1916,12 +1916,14 @@
         }
 
         function initBgOptions() {
-            document.querySelectorAll('.bg-option').forEach(option => {
-                option.addEventListener('click', () => {
+            // 使用事件委托优化背景选项点击
+            document.querySelector('.bg-options').addEventListener('click', (e) => {
+                const option = e.target.closest('.bg-option');
+                if (option) {
                     settings.background = option.dataset.bg;
                     saveData();
                     renderBg();
-                });
+                }
             });
         }
 
@@ -2852,14 +2854,6 @@
 
             container.appendChild(fragment);
 
-            // 使用事件委托处理撤销按钮点击
-            container.addEventListener('click', (e) => {
-                if (e.target.classList.contains('revoke-btn')) {
-                    const index = parseInt(e.target.dataset.index);
-                    revokeWinner(index);
-                }
-            });
-
             // 如果是虚拟滚动，需要重新计算可见项目
             if (historyVirtualScrollConfig.enabled && appState.history.length >= 50) {
                 updateHistoryVirtualVisibleItems();
@@ -2886,6 +2880,14 @@
 
             // 监听滚动事件
             container.addEventListener('scroll', handleHistoryVirtualScroll);
+            
+            // 监听点击事件（事件委托）
+            container.addEventListener('click', (e) => {
+                if (e.target.classList.contains('revoke-btn')) {
+                    const index = parseInt(e.target.dataset.index);
+                    revokeWinner(index);
+                }
+            });
             
             // 初始渲染
             updateHistoryVirtualVisibleItems();
@@ -2966,9 +2968,6 @@
             }
 
             visibleContainer.appendChild(fragment);
-
-            // 重新计算尺寸/布局
-            setTimeout(() => adjustPacketSize(), 0);
         }
 
         // 清理虚拟滚动
@@ -3571,6 +3570,7 @@
             modal.classList.add('active');
         }
 
+        // 使用事件委托处理中奖弹窗点击
         document.getElementById('winner-modal').addEventListener('click', (e) => {
             // 只有点击弹窗背景（非内容区域）才关闭
             if (e.target.id === 'winner-modal') {
@@ -3681,6 +3681,7 @@
         function showImportAllModal() { document.getElementById('import-all-modal').classList.add('active'); }
         function closeImportAllModal() { document.getElementById('import-all-modal').classList.remove('active'); }
 
+        // 使用事件委托处理文件导入
         document.getElementById('import-file').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -3708,6 +3709,7 @@
             reader.readAsText(file);
         });
 
+        // 使用事件委托处理全部数据导入
         document.getElementById('import-all-file').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -4052,6 +4054,7 @@
             showToast(shortcuts, 'info', 8000);
         }
 
+        // 使用事件委托处理设置面板点击
         document.querySelectorAll('.settings-panel').forEach(panel => {
             panel.addEventListener('click', (e) => {
                 if (e.target === panel) panel.classList.remove('active');
