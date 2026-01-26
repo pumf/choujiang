@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>年会抽奖系统</title>
     <style>
+        /* 
+         * 年会抽奖系统 - 样式表
+         * 
+         * 功能特点：
+         * - 3D球体抽奖动画
+         * - 方块滑动抽奖模式
+         * - 历史记录查看与撤销
+         * - 抽奖暂停/继续功能
+         * - Toast提示系统
+         * - 数据备份提醒
+         * - 浏览器兼容性检测
+         * 
+         * 技术栈：纯HTML + CSS + JavaScript (无外部依赖)
+         * 数据存储：LocalStorage
+         * 浏览器兼容：现代浏览器（Chrome 60+, Firefox 60+, Safari 12+）
+         */
         * {
             margin: 0;
             padding: 0;
@@ -471,6 +487,52 @@
 
         .winner-modal.active {
             display: flex;
+            opacity: 1;
+        }
+
+        .winner-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: bounceIn 0.5s ease;
+            position: relative;
+        }
+
+        .winner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .winner-header h2 {
+            margin: 0;
+            flex: 1;
+        }
+
+        .winner-close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .winner-close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
         }
 
         .winner-content {
@@ -870,11 +932,401 @@
             margin-bottom: 15px;
         }
 
+        /* 历史记录按钮 */
+        .history-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .history-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .history-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 暂停按钮 */
+        .pause-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: #333;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(254, 202, 87, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .pause-btn:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 6px 20px rgba(254, 202, 87, 0.6);
+        }
+
+        .pause-btn:active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .pause-btn.paused {
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+            color: white;
+        }
+
+        .pause-btn.paused:hover {
+            box-shadow: 0 6px 20px rgba(29, 209, 161, 0.6);
+        }
+
+        /* 历史记录面板 */
+        .history-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            z-index: 2000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .history-panel.active {
+            right: 0;
+        }
+
+        .history-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-header h2 {
+            margin: 0;
+            color: #fff;
+            font-size: 1.3em;
+        }
+
+        .close-history-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .close-history-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #feca57;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
+        }
+
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .history-item-prize {
+            font-weight: bold;
+            color: #feca57;
+            font-size: 1.1em;
+        }
+
+        .history-item-time {
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .history-item-winners {
+            color: #fff;
+            font-size: 0.95em;
+            margin-top: 5px;
+        }
+
+        .history-item-winners strong {
+            color: #1dd1a1;
+        }
+
+        .history-item-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .history-item-actions button {
+            padding: 5px 12px;
+            font-size: 0.85em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .history-item-actions .revoke-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            color: white;
+        }
+
+        .history-item-actions .revoke-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .history-item-actions .revoke-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(30, 30, 40, 0.95);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 500;
+            z-index: 3000;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 80%;
+            text-align: center;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 4px solid #1dd1a1;
+        }
+
+        .toast.error {
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .toast.warning {
+            border-left: 4px solid #feca57;
+        }
+
+        .toast.info {
+            border-left: 4px solid #48dbfb;
+        }
+
+        /* 加载状态 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 4000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #feca57;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loading-text {
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 浏览器兼容性提示 */
+        .compatibility-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 500;
+            z-index: 5000;
+            display: none;
+        }
+
+        .compatibility-warning.show {
+            display: block;
+        }
+
+        /* 数据备份提醒 */
+        .backup-reminder {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: rgba(30, 30, 40, 0.95);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border-left: 4px solid #feca57;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1500;
+            display: none;
+            max-width: 300px;
+        }
+
+        .backup-reminder.show {
+            display: block;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .backup-reminder h4 {
+            margin: 0 0 8px 0;
+            color: #feca57;
+        }
+
+        .backup-reminder p {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .backup-reminder button {
+            padding: 6px 15px;
+            font-size: 0.85em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .backup-reminder .export-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .backup-reminder .close-btn {
+            background: #555;
+            color: white;
+        }
+
+        .backup-reminder button:hover {
+            transform: scale(1.05);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* 浏览器兼容性检测 */
+        .compatibility-check {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 500;
+            z-index: 5000;
+            display: none;
+        }
+
+        .compatibility-check.show {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .title { font-size: 1.8em; }
             .lottery-btn { padding: 10px 30px; font-size: 1.1em; }
             .people-grid { grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)); grid-auto-rows: minmax(50px, 1fr); }
             .prize-panel { width: 260px; }
+            .history-panel { width: 100%; right: -100%; }
+            .history-btn { bottom: 15px; right: 15px; padding: 10px 15px; font-size: 14px; }
+            .settings-btn { bottom: 15px; right: 100px; }
+            .fullscreen-btn { bottom: 15px; right: 170px; }
         }
     </style>
 </head>
@@ -905,10 +1357,12 @@
         </div>
 
         <button class="lottery-btn" id="lottery-btn" onclick="startLottery()">🎰 开始抽奖</button>
+        <button class="pause-btn" id="pause-btn" onclick="togglePause()" style="display:none;">⏸ 暂停</button>
     </div>
 
     <button class="settings-btn" id="settings-btn" onclick="showSettings()">⚙️</button>
     <button class="fullscreen-btn" id="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
+    <button class="history-btn" id="history-btn" onclick="toggleHistoryPanel()">📜 历史记录</button>
 
     <div class="ball-container" id="ball-container">
         <div id="lottery-ball"></div>
@@ -920,140 +1374,175 @@
 
     <div class="winner-modal" id="winner-modal">
         <div class="winner-content">
-            <h2 id="winner-title">🎉 恭喜中奖 🎉</h2>
+            <div class="winner-header">
+                <h2 id="winner-title">🎉 恭喜中奖 🎉</h2>
+                <button class="winner-close-btn" onclick="closeWinnerModal()">✕</button>
+            </div>
             <div class="prize-name" id="winner-prize"></div>
             <div class="winner-names" id="winner-names"></div>
-            <div class="close-hint">点击任意位置关闭</div>
+            <div class="close-hint">点击任意位置或关闭按钮关闭</div>
         </div>
     </div>
 
     <div id="fireworks-container"></div>
 
-    <div class="settings-panel" id="settings-panel">
-        <span class="close-settings" onclick="closeSettings()">&times;</span>
-        <div class="settings-content">
-            <h2>⚙️ 系统设置</h2>
-
-            <div class="settings-section">
-                <h3>📝 标题设置</h3>
-                <input type="text" id="setting-title" placeholder="输入抽奖标题">
-                <button class="btn btn-primary" onclick="saveTitle()">保存标题</button>
-            </div>
-
-            <div class="settings-section">
-                <h3>🎲 抽奖方式</h3>
-                <div class="lottery-mode-options">
-                    <label class="mode-option">
-                        <input type="radio" name="lotteryMode" value="sphere" onchange="saveLotteryMode(this.value)">
-                        <span class="mode-label">🔮 3D球体旋转</span>
-                        <span class="mode-desc">经典3D球体抽奖效果</span>
-                    </label>
-                    <label class="mode-option">
-                        <input type="radio" name="lotteryMode" value="slide" onchange="saveLotteryMode(this.value)">
-                        <span class="mode-label">🎯 方块滑动</span>
-                        <span class="mode-desc">红包墙方块随机滑动抽取</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="settings-section">
-                <h3>🎨 背景设置</h3>
-                <div class="bg-options">
-                    <div class="bg-option active" data-bg="gradient1" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);"></div>
-                    <div class="bg-option" data-bg="gradient2" style="background: linear-gradient(135deg, #0f4037 0%, #195047 50%, #0f4037 100%);"></div>
-                    <div class="bg-option" data-bg="gradient3" style="background: linear-gradient(135deg, #4a1a1a 0%, #3d1a1a 50%, #2a0f0f 100%);"></div>
-                    <div class="bg-option" data-bg="gradient4" style="background: linear-gradient(135deg, #1a2a4a 0%, #1a2040 50%, #0f1a2a 100%);"></div>
-                </div>
-                <div class="file-upload" onclick="document.getElementById('bg-file').click()" style="margin-top:15px;">
-                    <input type="file" id="bg-file" accept="image/*" onchange="uploadBgImage(event)">
-                    <p>📷 上传本地背景图片</p>
-                    <p style="font-size:12px;color:rgba(255,255,255,0.5)">支持 jpg、png、gif</p>
-                </div>
-                <button class="btn btn-secondary" onclick="clearBgImage()" style="margin-top:10px;">清除背景图片</button>
-            </div>
-
-            <div class="settings-section">
-                <h3>🏆 奖项管理</h3>
-                <input type="text" id="setting-prize-name" placeholder="奖项名称">
-                <input type="text" id="setting-prize-desc" placeholder="奖品描述">
-                <div style="display:flex;gap:10px;margin-bottom:10px;">
-                    <input type="number" id="setting-prize-count" value="1" min="1" placeholder="人数" style="flex:1;">
-                    <input type="color" id="setting-prize-color" value="#ff6b6b" style="width:50px;height:42px;padding:2px;border-radius:8px;cursor:pointer;">
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="addPrizeFromSettings()">添加奖项</button>
-                    <button class="btn btn-secondary" onclick="clearPrizes()">清空奖项</button>
-                </div>
-            </div>
-
-            <div class="settings-section">
-                <h3>👥 人员管理</h3>
-                <textarea id="add-people-text" rows="4" placeholder="每行一个姓名"></textarea>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="addPeople()">添加人员</button>
-                    <button class="btn btn-secondary" onclick="showImportModal()">导入</button>
-                    <button class="btn btn-success" onclick="exportPeople()">导出</button>
-                    <button class="btn btn-danger" onclick="clearPeople()">清空</button>
-                </div>
-            </div>
-
-            <div class="settings-section">
-                <h3>💾 数据管理</h3>
-                <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="exportAll()">导出全部</button>
-                    <button class="btn btn-secondary" onclick="showImportAllModal()">导入全部</button>
-                    <button class="btn btn-danger" onclick="clearAll()">清空所有</button>
-                </div>
+    <!-- 历史记录面板 -->
+    <div class="history-panel" id="history-panel">
+        <div class="history-header">
+            <h2>📜 抽奖历史记录</h2>
+            <button class="close-history-btn" onclick="toggleHistoryPanel()">✕</button>
+        </div>
+        <div class="history-list" id="history-list">
+            <div class="empty-state">
+                <div class="icon">📜</div>
+                <p>暂无历史记录</p>
             </div>
         </div>
     </div>
 
-    <div class="settings-panel" id="import-modal">
-        <span class="close-settings" onclick="closeImportModal()">&times;</span>
-        <div class="settings-content">
-            <h3>导入人员</h3>
-            <div class="file-upload" onclick="document.getElementById('import-file').click()">
-                <input type="file" id="import-file" accept=".txt,.csv,.json">
-                <p>点击选择文件</p>
-                <p style="font-size:12px;color:rgba(255,255,255,0.5)">支持 txt、csv、json</p>
-            </div>
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 加载状态 -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loading-text">加载中...</div>
         </div>
     </div>
 
-    <div class="settings-panel" id="import-all-modal">
-        <span class="close-settings" onclick="closeImportAllModal()">&times;</span>
-        <div class="settings-content">
-            <h3>导入全部配置</h3>
-            <div class="file-upload" onclick="document.getElementById('import-all-file').click()">
-                <input type="file" id="import-all-file" accept=".json">
-                <p>点击选择配置文件</p>
-                <p style="font-size:12px;color:rgba(255,255,255,0.5)">仅支持 json 格式</p>
-            </div>
-        </div>
+    <!-- 浏览器兼容性检测 -->
+    <div class="compatibility-check" id="compatibility-check">
+        ⚠️ 检测到浏览器兼容性问题，部分功能可能无法正常使用
+    </div>
+
+    <!-- 数据备份提醒 -->
+    <div class="backup-reminder" id="backup-reminder">
+        <h4>💡 数据备份提醒</h4>
+        <p>您有未备份的数据，建议立即导出备份！</p>
+        <button class="export-btn" onclick="exportData()">立即导出</button>
+        <button class="close-btn" onclick="closeBackupReminder()">稍后</button>
     </div>
 
     <script>
-        let people = [];
-        let prizes = [];
-        let history = [];
-        let settings = { title: '🎉 年会抽奖系统 🎊', background: 'gradient1', lotteryMode: 'sphere' };
-        let currentPrizeIndex = null;
-        let isLotteryRunning = false;
-        let animationId = null;
-        let currentAnimationData = null;
-        let flipIntervalId = null;
+        // ==================== 全局状态管理 ====================
+        
+        /**
+         * 应用状态对象 - 封装所有全局变量
+         * 
+         * 使用对象封装而非多个全局变量的好处：
+         * 1. 避免全局命名空间污染
+         * 2. 便于状态管理和调试
+         * 3. 支持未来扩展（如状态快照、时间旅行调试）
+         * 4. 更好的代码组织和可维护性
+         */
+        const appState = {
+            // ==================== 数据层 ====================
+            
+            // 人员列表
+            // 格式：[{ id: number, name: string, prize: string|null }]
+            // id: 唯一标识符（使用 Date.now() + Math.random() 生成）
+            // name: 人员姓名
+            // prize: 已中奖项名称，null表示未中奖
+            people: [],
+            
+            // 奖项列表
+            // 格式：[{ id: number, name: string, desc: string, count: number, color: string, awarded: boolean }]
+            // id: 唯一标识符
+            // name: 奖项名称
+            // desc: 奖项描述
+            // count: 奖项数量（可中奖人数）
+            // color: 奖项颜色（用于UI显示）
+            // awarded: 是否已抽取
+            prizes: [],
+            
+            // 历史记录
+            // 格式：[{ prizeName: string, prizeDesc: string, winners: string[], time: string, revoked: boolean }]
+            // prizeName: 奖项名称
+            // prizeDesc: 奖项描述
+            // winners: 中奖者姓名数组
+            // time: 抽奖时间（ISO格式）
+            // revoked: 是否已撤销
+            history: [],
+            
+            // 设置
+            // 格式：{ title: string, background: string, lotteryMode: string }
+            // title: 页面标题
+            // background: 背景主题（gradient1-4 或 custom）
+            // lotteryMode: 抽奖模式（sphere 或 slide）
+            settings: { title: '🎉 年会抽奖系统 🎊', background: 'gradient1', lotteryMode: 'sphere' },
+            
+            // ==================== 状态层 ====================
+            
+            // 当前选中的奖项索引
+            // null: 未选择，自动选择第一个可用奖项
+            // number: 指定索引的奖项
+            currentPrizeIndex: null,
+            
+            // 抽奖运行状态
+            // true: 抽奖进行中
+            // false: 抽奖未开始或已结束
+            isLotteryRunning: false,
+            
+            // 暂停状态
+            // true: 抽奖已暂停
+            // false: 抽奖正常进行
+            isPaused: false,
+            
+            // ==================== 动画层 ====================
+            
+            // 动画ID（用于 cancelAnimationFrame）
+            // 存储 requestAnimationFrame 返回的ID
+            animationId: null,
+            
+            // 当前动画数据
+            // 用于暂停/恢复功能
+            // 格式：{ availablePeople: array, prize: object, ... }
+            currentAnimationData: null,
+            
+            // 翻动动画定时器ID
+            // 用于清理定时器，避免内存泄漏
+            flipIntervalId: null,
+            
+            // 暂停动画定时器ID
+            // 用于清理暂停时的定时器
+            pauseIntervalId: null
+        };
+
+        // ==================== 向后兼容 ====================
+        // 
+        // 为了保持与现有代码的兼容性，将 appState 的属性映射到全局变量
+        // 这样可以逐步迁移，避免一次性修改所有代码
+        // 
+        // 注意：这些变量是引用类型，修改它们会直接影响 appState
+        // 
+        let people = appState.people;
+        let prizes = appState.prizes;
+        let history = appState.history;
+        let settings = appState.settings;
+        let currentPrizeIndex = appState.currentPrizeIndex;
+        let isLotteryRunning = appState.isLotteryRunning;
+        let isPaused = appState.isPaused;
+        let animationId = appState.animationId;
+        let currentAnimationData = appState.currentAnimationData;
+        let flipIntervalId = appState.flipIntervalId;
+        let pauseIntervalId = appState.pauseIntervalId;
 
         document.addEventListener('DOMContentLoaded', () => {
+            // 检查浏览器兼容性
+            checkCompatibility();
+
             loadData();
             renderAll();
             initBgOptions();
+            initLotteryMode();
             document.getElementById('toggle-prize-btn').addEventListener('click', togglePrizePanel);
             document.getElementById('settings-btn').addEventListener('click', showSettings);
             document.getElementById('stop-btn').addEventListener('click', stopLottery);
             document.getElementById('cancel-btn').addEventListener('click', cancelLottery);
             document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
 
-            // 点击空白区域收起奖项列表
+            // 点击空白区域关闭奖项列表
             document.addEventListener('click', (e) => {
                 const prizePanel = document.getElementById('prize-panel');
                 const toggleBtn = document.getElementById('toggle-prize-btn');
@@ -1063,29 +1552,258 @@
                     prizePanel.classList.remove('active');
                 }
             });
+
+            // 移动端触摸事件处理
+            document.addEventListener('touchstart', handleTouchStart, { passive: true });
+            document.addEventListener('touchmove', handleTouchMove, { passive: true });
+            document.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+            // 检查是否需要备份
+            setTimeout(() => checkBackupNeeded(), 3000);
+
+            // 监听页面关闭事件，提醒保存数据
+            window.addEventListener('beforeunload', (e) => {
+                if (isLotteryRunning) {
+                    e.preventDefault();
+                    e.returnValue = '抽奖正在进行中，确定要离开吗？';
+                }
+            });
+        });
         });
 
+        /**
+         * 从 LocalStorage 加载数据
+         * 
+         * 功能：
+         * 1. 读取 localStorage 中的抽奖数据
+         * 2. 解析 JSON 数据
+         * 3. 更新应用状态
+         * 4. 处理解析错误和数据损坏
+         * 
+         * 数据格式：
+         * {
+         *   people: [...],
+         *   prizes: [...],
+         *   history: [...],
+         *   settings: {...}
+         * }
+         * 
+         * 错误处理：
+         * - JSON 解析失败：清空损坏的数据
+         * - 数据格式错误：使用默认值
+         * - localStorage 不可用：静默失败
+         * 
+         * @returns {void}
+         */
         function loadData() {
-            const savedData = localStorage.getItem('lotteryData');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                people = data.people || [];
-                prizes = data.prizes || [];
-                history = data.history || [];
-                settings = { ...settings, ...data.settings };
+            try {
+                const savedData = localStorage.getItem('lotteryData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    appState.people = data.people || [];
+                    appState.prizes = data.prizes || [];
+                    appState.history = data.history || [];
+                    appState.settings = { ...appState.settings, ...data.settings };
+                    
+                    // 更新兼容性变量
+                    people = appState.people;
+                    prizes = appState.prizes;
+                    history = appState.history;
+                    settings = appState.settings;
+                    
+                    showToast('数据加载成功', 'success', 2000);
+                }
+            } catch (e) {
+                console.error('加载数据失败:', e);
+                showToast('数据加载失败：' + e.message, 'error', 5000);
+                // 清空损坏的数据
+                localStorage.removeItem('lotteryData');
             }
         }
 
+        /**
+         * 保存数据到 LocalStorage
+         * 
+         * 功能：
+         * 1. 将应用状态序列化为 JSON
+         * 2. 检查数据大小（避免超出 localStorage 限制）
+         * 3. 保存到 localStorage
+         * 4. 处理存储空间不足的情况
+         * 
+         * 数据大小限制：
+         * - 大多数浏览器：5MB per origin
+         * - 安全限制：4.5MB（留0.5MB缓冲）
+         * - 超出限制：提示用户删除数据
+         * 
+         * 错误处理：
+         * - QuotaExceededError: 存储空间不足
+         * - 其他错误：显示具体错误信息
+         * 
+         * @returns {void}
+         */
         function saveData() {
-            const dataToSave = {
-                people,
-                prizes,
-                history,
-                settings: {
-                    title: settings.title,
-                    background: settings.background || 'gradient1',
-                    lotteryMode: settings.lotteryMode || 'sphere'
+            try {
+                const dataToSave = {
+                    people: appState.people,
+                    prizes: appState.prizes,
+                    history: appState.history,
+                    settings: appState.settings
+                };
+                const dataString = JSON.stringify(dataToSave);
+                
+                // 检查数据大小
+                const dataSize = new Blob([dataString]).size;
+                const maxSize = 4.5 * 1024 * 1024; // 4.5MB (留0.5MB缓冲)
+                
+                if (dataSize > maxSize) {
+                    showToast('数据过大，无法保存到浏览器！请删除一些数据', 'error', 8000);
+                    return;
                 }
+                
+                localStorage.setItem('lotteryData', dataString);
+            } catch (e) {
+                console.error('保存数据失败:', e);
+                
+                if (e.name === 'QuotaExceededError') {
+                    showToast('存储空间不足！请删除一些历史记录或数据', 'error', 8000);
+                } else {
+                    showToast('保存数据失败：' + e.message, 'error');
+                }
+            }
+        }
+
+        /**
+         * 显示 Toast 提示
+         * 
+         * 功能：
+         * 1. 显示临时消息提示
+         * 2. 支持多种类型（success, error, warning, info）
+         * 3. 自动消失
+         * 4. 防止重复显示
+         * 
+         * 消息类型：
+         * - success: 成功消息（绿色边框）
+         * - error: 错误消息（红色边框）
+         * - warning: 警告消息（黄色边框）
+         * - info: 信息消息（蓝色边框）
+         * 
+         * 显示位置：
+         * - 页面顶部居中
+         * - 固定定位，不随滚动移动
+         * 
+         * @param {string} message - 提示消息内容
+         * @param {string} type - 消息类型（success/error/warning/info）
+         * @param {number} duration - 显示时长（毫秒）
+         * @returns {void}
+         */
+        function showToast(message, type = 'info', duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        /**
+         * 显示加载状态
+         * 
+         * 功能：
+         * 1. 显示全屏遮罩层
+         * 2. 显示加载动画（旋转圆圈）
+         * 3. 显示加载文本
+         * 4. 防止用户交互
+         * 
+         * 使用场景：
+         * - 文件导入
+         * - 数据导出
+         * - 大量数据处理
+         * - 网络请求（未来扩展）
+         * 
+         * @param {string} text - 加载文本（默认："加载中..."）
+         * @returns {void}
+         */
+        function showLoading(text = '加载中...') {
+            const loading = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            loadingText.textContent = text;
+            loading.classList.add('active');
+        }
+
+        /**
+         * 隐藏加载状态
+         * 
+         * 功能：
+         * 1. 隐藏全屏遮罩层
+         * 2. 恢复用户交互
+         * 
+         * @returns {void}
+         */
+        function hideLoading() {
+            const loading = document.getElementById('loading-overlay');
+            loading.classList.remove('active');
+        }
+
+        // 浏览器兼容性检测
+        function checkCompatibility() {
+            const warnings = [];
+
+            // 检查 localStorage
+            if (!window.localStorage) {
+                warnings.push('浏览器不支持 LocalStorage');
+            }
+
+            // 检查 CSS3 支持
+            const testDiv = document.createElement('div');
+            if (!('transform' in testDiv.style)) {
+                warnings.push('浏览器不支持 CSS3 Transform');
+            }
+
+            if (!('backfaceVisibility' in testDiv.style)) {
+                warnings.push('浏览器不支持 backface-visibility');
+            }
+
+            // 检查 ES6 支持
+            try {
+                new Function('const test = () => {}');
+            } catch (e) {
+                warnings.push('浏览器不支持 ES6 语法');
+            }
+
+            if (warnings.length > 0) {
+                const check = document.getElementById('compatibility-check');
+                check.textContent = '⚠️ 检测到浏览器兼容性问题：' + warnings.join('、');
+                check.classList.add('show');
+                setTimeout(() => check.classList.remove('show'), 5000);
+            }
+        }
+
+        // 显示数据备份提醒
+        function showBackupReminder() {
+            const reminder = document.getElementById('backup-reminder');
+            reminder.classList.add('show');
+        }
+
+        // 关闭数据备份提醒
+        function closeBackupReminder() {
+            const reminder = document.getElementById('backup-reminder');
+            reminder.classList.remove('show');
+        }
+
+        // 检查是否需要备份
+        function checkBackupNeeded() {
+            // 如果有数据且超过7天未备份，显示提醒
+            const lastBackup = localStorage.getItem('lastBackupTime');
+            const now = Date.now();
+            
+            if (people.length > 0 || prizes.length > 0) {
+                if (!lastBackup || (now - parseInt(lastBackup)) > 7 * 24 * 60 * 60 * 1000) {
+                    setTimeout(() => showBackupReminder(), 2000);
+                }
+            }
+        }
             };
             localStorage.setItem('lotteryData', JSON.stringify(dataToSave));
         }
@@ -1160,29 +1878,81 @@
             saveData();
         }
 
+        /**
+         * 渲染统计信息
+         * 
+         * 功能：
+         * 1. 显示总人数
+         * 2. 显示已中奖人数
+         * 3. 显示剩余未中奖人数
+         * 
+         * @returns {void}
+         */
         function renderStats() {
-            const total = people.length;
-            const won = people.filter(p => p.prize).length;
+            const total = appState.people.length;
+            const won = appState.people.filter(p => p.prize).length;
+            
+            // 使用 textContent 避免 XSS 攻击
             document.getElementById('total-count').textContent = total;
             document.getElementById('won-count').textContent = won;
             document.getElementById('remain-count').textContent = total - won;
         }
 
+        /**
+         * 渲染奖项列表
+         * 
+         * 功能：
+         * 1. 显示所有奖项
+         * 2. 显示奖项状态（已抽取/待抽取）
+         * 3. 显示中奖者名单
+         * 4. 支持选择奖项进行抽奖
+         * 
+         * 选择逻辑：
+         * - 只能选择第一个未抽取的奖项
+         * - 已抽取的奖项不可点击
+         * - 当前选中的奖项高亮显示
+         * 
+         * 性能优化：
+         * - 使用 DocumentFragment 减少 DOM 操作
+         * - 使用事件委托替代每个元素绑定事件
+         * 
+         * @returns {void}
+         */
         function renderPrizes() {
             const container = document.getElementById('prize-list');
+            
+            // 清空容器
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+
             if (prizes.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="icon">🏆</div><p>暂无奖项</p></div>';
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.innerHTML = `
+                    <div class="icon">🏆</div>
+                    <p>暂无奖项</p>
+                `;
+                container.appendChild(emptyState);
                 return;
             }
-            
+
             const firstUnawardedIndex = prizes.findIndex(p => !p.awarded);
-            
-            container.innerHTML = prizes.map((prize, index) => {
+            const fragment = document.createDocumentFragment();
+
+            prizes.forEach((prize, index) => {
                 const winners = people.filter(p => p.prize === prize.name);
                 const isClickable = !prize.awarded && (index === firstUnawardedIndex || currentPrizeIndex === index);
-                return `
-                <div class="prize-item ${prize.awarded ? 'disabled' : ''} ${!isClickable && !prize.awarded ? 'unselectable' : ''} ${currentPrizeIndex === index ? 'active' : ''}"
-                     onclick="isClickable ? selectPrize(${index}) : null" style="border-left-color: ${prize.color}">
+                
+                const prizeItem = document.createElement('div');
+                prizeItem.className = `prize-item ${prize.awarded ? 'disabled' : ''} ${!isClickable && !prize.awarded ? 'unselectable' : ''} ${currentPrizeIndex === index ? 'active' : ''}`;
+                prizeItem.style.borderLeftColor = prize.color;
+                
+                if (isClickable) {
+                    prizeItem.onclick = () => selectPrize(index);
+                }
+
+                prizeItem.innerHTML = `
                     <div class="name" style="color: ${prize.color}">${prize.name}</div>
                     <div class="desc">${prize.desc}</div>
                     <div class="info">
@@ -1190,9 +1960,12 @@
                         <span class="status ${prize.awarded ? 'awarded' : ''}">${prize.awarded ? '已抽取' : '待抽取'}</span>
                     </div>
                     ${winners.length > 0 ? `<div class="desc" style="margin-top:8px;color:#feca57;">中奖: ${winners.map(w => w.name).join('、')}</div>` : ''}
-                </div>
-            `;
-            }).join('');
+                `;
+
+                fragment.appendChild(prizeItem);
+            });
+
+            container.appendChild(fragment);
         }
 
         function selectPrize(index) {
@@ -1205,24 +1978,72 @@
             renderPrizes();
         }
 
+        /**
+         * 渲染人员列表
+         * 
+         * 功能：
+         * 1. 显示所有人员的红包卡片
+         * 2. 显示中奖状态
+         * 3. 支持点击查看详情
+         * 
+         * 性能优化：
+         * - 使用 DocumentFragment 减少 DOM 操作
+         * - 使用事件委托替代每个元素绑定事件
+         * - 使用 DocumentFragment 批量插入
+         * 
+         * @returns {void}
+         */
         function renderPeople() {
             const container = document.getElementById('people-grid');
+            
+            // 清空容器
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+
             if (people.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>暂无人员，请在设置中添加</p></div>';
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.innerHTML = `
+                    <div class="icon">👥</div>
+                    <p>暂无人员，请在设置中添加</p>
+                `;
+                container.appendChild(emptyState);
                 return;
             }
-            container.innerHTML = people.map((person, index) => {
+
+            // 使用 DocumentFragment 批量插入
+            const fragment = document.createDocumentFragment();
+
+            people.forEach((person, index) => {
                 const won = !!person.prize;
-                const frontContent = won
-                    ? `<span class="won-prize">${person.prize}</span><span class="won-name">${person.name}</span>`
-                    : `<span class="front-name" style="visibility:hidden"></span>`;
-                return `
-                    <div class="red-packet ${won ? 'won' : ''}" onclick="showPersonInfo(${index})" title="${person.name}">
-                        <div class="face front">${frontContent}</div>
+                const packet = document.createElement('div');
+                packet.className = `red-packet ${won ? 'won' : ''}`;
+                packet.title = person.name;
+                packet.dataset.index = index;
+
+                if (won) {
+                    packet.innerHTML = `
+                        <div class="face front">
+                            <span class="won-prize">${person.prize}</span>
+                            <span class="won-name">${person.name}</span>
+                        </div>
                         <div class="face back"><span class="name">${person.name}</span></div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                } else {
+                    packet.innerHTML = `
+                        <div class="face front">
+                            <span class="front-name" style="visibility:hidden"></span>
+                        </div>
+                        <div class="face back"><span class="name">${person.name}</span></div>
+                    `;
+                }
+
+                fragment.appendChild(packet);
+            });
+
+            container.appendChild(fragment);
+
             // 重新计算尺寸/布局
             setTimeout(() => adjustPacketSize(), 0);
         }
@@ -1296,13 +2117,22 @@
             const flipCount = 3 + Math.floor(Math.random() * 2); // 3 或 4
             for (let i = 0; i < flipCount; i++) {
                 const el = candidates[Math.floor(Math.random() * candidates.length)];
-                if (!el.classList.contains('is-flipped')) {
+                if (el && !el.classList.contains('is-flipped')) {
                     el.classList.add('is-flipped');
-                    setTimeout(() => el.classList.remove('is-flipped'), 1500);
+                    setTimeout(() => {
+                        if (el && el.classList) {
+                            el.classList.remove('is-flipped');
+                        }
+                    }, 1500);
                 }
             }
         }
         // 调整翻动节奏：稍慢一些，数量也增多
+        // 清理之前的定时器，避免重复
+        if (flipIntervalId) {
+            clearInterval(flipIntervalId);
+            flipIntervalId = null;
+        }
         flipIntervalId = setInterval(randomFlipNonWon, 1800);
 
         function showPersonInfo(index) {
@@ -1333,10 +2163,12 @@
             prizes.push({ id: Date.now(), name, desc, count, color, awarded: false });
             saveData();
             renderPrizes();
+            updateLotteryButton();
 
-            document.getElementById('prize-name').value = '';
-            document.getElementById('prize-desc').value = '';
-            document.getElementById('prize-count').value = '1';
+            document.getElementById('setting-prize-name').value = '';
+            document.getElementById('setting-prize-desc').value = '';
+            document.getElementById('setting-prize-count').value = '1';
+            showToast('奖项添加成功', 'success');
         }
 
         function addPrizeFromSettings() {
@@ -1365,11 +2197,17 @@
 
         function clearPrizes() {
             if (confirm('确定要清空所有奖项吗？中奖记录将一并清除')) {
-                prizes = [];
-                people.forEach(p => p.prize = null);
-                currentPrizeIndex = null;
+                appState.prizes = [];
+                appState.people.forEach(p => p.prize = null);
+                appState.currentPrizeIndex = null;
+                
+                // 更新兼容性变量
+                prizes = appState.prizes;
+                currentPrizeIndex = appState.currentPrizeIndex;
+                
                 saveData();
                 renderAll();
+                showToast('奖项已清空', 'success');
             }
         }
 
@@ -1383,20 +2221,32 @@
             } else {
                 const availablePrizes = prizes.filter(p => !p.awarded);
                 console.log('可用奖项数量:', availablePrizes.length);
-                if (availablePrizes.length === 0) { alert('所有奖项都已抽取完毕！'); return; }
+                if (availablePrizes.length === 0) { 
+                    showToast('所有奖项都已抽取完毕！', 'warning');
+                    return; 
+                }
                 prizeIndex = prizes.findIndex(p => !p.awarded);
                 prize = prizes[prizeIndex];
             }
 
             const availablePeople = people.filter(p => !p.prize);
             console.log('可用人员数量:', availablePeople.length);
-            if (availablePeople.length === 0) { alert('没有可抽奖的人员了！'); return; }
+            if (availablePeople.length === 0) { 
+                showToast('没有可抽奖的人员了！', 'warning');
+                return; 
+            }
 
-            // 隐藏主抽奖按钮
+            // 隐藏主抽奖按钮，显示暂停按钮
             const btn = document.getElementById('lottery-btn');
             btn.style.visibility = 'hidden';
+            
+            const pauseBtn = document.getElementById('pause-btn');
+            pauseBtn.style.display = 'block';
+            pauseBtn.textContent = '⏸ 暂停';
+            pauseBtn.classList.remove('paused');
 
             isLotteryRunning = true;
+            isPaused = false;
 
             console.log('抽奖模式切换:', settings.lotteryMode);
             if (settings.lotteryMode === 'slide') {
@@ -1480,15 +2330,28 @@
                     }
                 });
                 
-                // 清理滑动层
-                slideLayer.style.pointerEvents = 'none';
-                slideLayer.innerHTML = '';
-                
-                // 显示主抽奖按钮
-                const lotteryBtn = document.getElementById('lottery-btn');
-                lotteryBtn.style.visibility = 'visible';
-                isLotteryRunning = false;
-            };
+            // 清理滑动层
+            slideLayer.style.pointerEvents = 'none';
+            slideLayer.innerHTML = '';
+            
+            // 清理定时器
+            if (pauseIntervalId) {
+                clearInterval(pauseIntervalId);
+                pauseIntervalId = null;
+            }
+            
+            // 显示主抽奖按钮
+            const lotteryBtn = document.getElementById('lottery-btn');
+            lotteryBtn.style.visibility = 'visible';
+            isLotteryRunning = false;
+            isPaused = false;
+            
+            // 隐藏暂停按钮
+            const pauseBtn = document.getElementById('pause-btn');
+            pauseBtn.style.display = 'none';
+            
+            showToast('已取消抽奖', 'info');
+        };
             
             cancelBtn.onclick = window.cancelSlide;
             
@@ -1507,6 +2370,15 @@
             // 滑动动画
             let sliding = true;
             let lastHighlightedPacket = null;
+
+            // 保存动画数据用于暂停/恢复
+            currentAnimationData = {
+                availablePeople,
+                prize,
+                tiles,
+                packetRects,
+                slideInterval: null
+            };
 
             const slideInterval = setInterval(() => {
                 if (!sliding) return;
@@ -1527,17 +2399,18 @@
                     }
                     lastHighlightedPacket = randomPacket;
 
-                    // 立即设置位置，没有transition动画
-                    tileObj.element.style.transition = 'none';
                     tileObj.element.style.transform = `translate3d(${randomPacket.x - 25}px, ${randomPacket.y - 25}px, 0)`;
                 });
             }, 80);
+            
+            currentAnimationData.slideInterval = slideInterval;
             
             // 停止并揭晓
             window.stopSlide = () => {
                 if (!sliding) return;
                 sliding = false;
                 clearInterval(slideInterval);
+                currentAnimationData.slideInterval = null;
                 
                 stopBtn.disabled = true;
                 stopBtn.textContent = '⏳ 揭晓中...';
@@ -1671,12 +2544,521 @@
                         btn.classList.remove('running');
                         btn.style.visibility = 'visible';
                         isLotteryRunning = false;
+                        isPaused = false;
+                        
+                        // 隐藏暂停按钮
+                        const pauseBtn = document.getElementById('pause-btn');
+                        pauseBtn.style.display = 'none';
+                        
+                         // 清理定时器
+                         if (pauseIntervalId) {
+                             clearInterval(pauseIntervalId);
+                             pauseIntervalId = null;
+                         }
+                         
+                         // 清理滑动动画定时器
+                         if (currentAnimationData.slideInterval) {
+                             clearInterval(currentAnimationData.slideInterval);
+                             currentAnimationData.slideInterval = null;
+                         }
+                        
+                        showToast('抽奖完成！', 'success');
                     }, 300);
                 }, 500);
             };
+        }
+
+        // 显示中奖弹窗
+        function showWinners(prize, winners) {
+            const modal = document.getElementById('winner-modal');
+            document.getElementById('winner-prize').textContent = `【${prize.name}】${prize.desc}`;
+            document.getElementById('winner-names').innerHTML = winners.map(w =>
+                `<div class="winner-name">${w.name}</div>`
+            ).join('');
+            modal.classList.add('active');
+        }
+
+        // 关闭中奖弹窗
+        function closeWinnerModal() {
+            const modal = document.getElementById('winner-modal');
+            modal.classList.remove('active');
+        }
+
+        /**
+         * 切换历史记录面板
+         * 
+         * 功能：
+         * 1. 打开/关闭历史记录面板
+         * 2. 面板打开时自动渲染历史记录
+         * 3. 面板关闭时清理内容
+         * 
+         * @returns {void}
+         */
+        function toggleHistoryPanel() {
+            const panel = document.getElementById('history-panel');
+            panel.classList.toggle('active');
+            if (panel.classList.contains('active')) {
+                renderHistory();
+            }
+        }
+
+        /**
+         * 渲染历史记录列表
+         * 
+         * 功能：
+         * 1. 显示所有抽奖历史记录
+         * 2. 显示中奖者姓名
+         * 3. 显示抽奖时间
+         * 4. 显示撤销状态
+         * 5. 提供撤销按钮（未撤销的记录）
+         * 
+         * 数据格式：
+         * {
+         *   prizeName: string,      // 奖项名称
+         *   prizeDesc: string,      // 奖项描述
+         *   winners: string[],      // 中奖者姓名数组
+         *   time: string,           // 抽奖时间（ISO格式）
+         *   revoked: boolean        // 是否已撤销
+         * }
+         * 
+         * 性能优化：
+         * - 使用 DocumentFragment 减少 DOM 操作
+         * - 使用事件委托替代每个按钮绑定事件
+         * 
+         * @returns {void}
+         */
+        function renderHistory() {
+            const container = document.getElementById('history-list');
             
-            // 绑定停止按钮
-            stopBtn.onclick = window.stopSlide;
+            // 清空容器
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+
+            if (appState.history.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.innerHTML = `
+                    <div class="icon">📜</div>
+                    <p>暂无历史记录</p>
+                `;
+                container.appendChild(emptyState);
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+
+            appState.history.forEach((item, index) => {
+                const time = new Date(item.time).toLocaleString('zh-CN');
+                const isRevoked = item.revoked;
+
+                const historyItem = document.createElement('div');
+                historyItem.className = `history-item ${isRevoked ? 'revoked' : ''}`;
+
+                historyItem.innerHTML = `
+                    <div class="history-item-header">
+                        <span class="history-item-prize">${item.prizeName}</span>
+                        <span class="history-item-time">${time}</span>
+                    </div>
+                    <div class="history-item-winners">
+                        <strong>中奖者：</strong>${item.winners.join('、')}
+                        ${isRevoked ? ' <span style="color:#ff6b6b;">(已撤销)</span>' : ''}
+                    </div>
+                    ${!isRevoked ? `
+                        <div class="history-item-actions">
+                            <button class="revoke-btn" data-index="${index}">撤销中奖</button>
+                        </div>
+                    ` : ''}
+                `;
+
+                fragment.appendChild(historyItem);
+            });
+
+            container.appendChild(fragment);
+
+            // 使用事件委托处理撤销按钮点击
+            container.addEventListener('click', (e) => {
+                if (e.target.classList.contains('revoke-btn')) {
+                    const index = parseInt(e.target.dataset.index);
+                    revokeWinner(index);
+                }
+            });
+        }
+
+        /**
+         * 撤销中奖记录
+         * 
+         * 功能：
+         * 1. 撤销指定的中奖记录
+         * 2. 恢复中奖人员的抽奖资格
+         * 3. 恢复奖项的抽奖资格
+         * 4. 标记记录为已撤销
+         * 5. 保存数据并更新UI
+         * 
+         * 撤销逻辑：
+         * 1. 找到历史记录
+         * 2. 检查是否已撤销
+         * 3. 遍历中奖者，恢复抽奖资格
+         * 4. 恢复奖项状态
+         * 5. 标记记录为已撤销
+         * 6. 保存数据
+         * 7. 重新渲染所有内容
+         * 
+         * @param {number} historyIndex - 历史记录索引
+         * @returns {void}
+         */
+        function revokeWinner(historyIndex) {
+            if (!confirm('确定要撤销这个中奖记录吗？')) {
+                return;
+            }
+
+            const record = history[historyIndex];
+            if (record.revoked) {
+                showToast('该记录已撤销', 'warning');
+                return;
+            }
+
+            // 恢复中奖人员的抽奖资格
+            record.winners.forEach(winnerName => {
+                const personIndex = people.findIndex(p => p.name === winnerName);
+                if (personIndex !== -1) {
+                    people[personIndex].prize = null;
+                }
+            });
+
+            // 恢复奖项的抽奖资格
+            const prizeIndex = prizes.findIndex(p => p.name === record.prizeName);
+            if (prizeIndex !== -1) {
+                prizes[prizeIndex].awarded = false;
+            }
+
+            // 标记记录为已撤销
+            record.revoked = true;
+
+            // 保存数据
+            saveData();
+
+            // 重新渲染
+            renderAll();
+            renderHistory();
+
+            showToast('中奖记录已撤销', 'success');
+        }
+        }
+
+        // 切换暂停状态
+        function togglePause() {
+            const pauseBtn = document.getElementById('pause-btn');
+            
+            if (!isPaused) {
+                // 暂停
+                isPaused = true;
+                pauseBtn.textContent = '▶️ 继续';
+                pauseBtn.classList.add('paused');
+                
+                // 清除动画
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                
+                // 清除定时器
+                if (pauseIntervalId) {
+                    clearInterval(pauseIntervalId);
+                    pauseIntervalId = null;
+                }
+                
+                 showToast('已暂停', 'info');
+             } else {
+                 // 继续
+                 isPaused = false;
+                 pauseBtn.textContent = '⏸ 暂停';
+                 pauseBtn.classList.remove('paused');
+                 
+                 // 恢复动画
+                 if (currentAnimationData) {
+                     if (settings.lotteryMode === 'slide') {
+                         resumeSlideAnimation();
+                     } else {
+                         resumeGatherAnimation();
+                     }
+                 }
+                 
+                 showToast('已继续', 'success');
+             }
+         }
+ 
+         // 恢复滑块动画
+         function resumeSlideAnimation() {
+             if (!currentAnimationData) return;
+             
+             const { availablePeople, prize, tiles, packetRects, slideInterval } = currentAnimationData;
+             
+             // 清理旧的定时器
+             if (pauseIntervalId) {
+                 clearInterval(pauseIntervalId);
+                 pauseIntervalId = null;
+             }
+             
+             // 重新开始滑动动画
+             pauseIntervalId = setInterval(() => {
+                 if (isPaused) return;
+                 
+                 tiles.forEach(tileObj => {
+                     // 随机选择目标红包位置
+                     const randomPacket = packetRects[Math.floor(Math.random() * packetRects.length)];
+                     tileObj.currentTarget = randomPacket;
+                    
+                    tileObj.element.style.transform = `translate3d(${randomPacket.x - 25}px, ${randomPacket.y - 25}px, 0)`;
+                });
+            }, 80);
+        }
+
+        // 恢复球体动画
+        function resumeGatherAnimation() {
+            if (!currentAnimationData) return;
+            
+            const { availablePeople, prize } = currentAnimationData;
+            
+            // 重新开始球体动画
+            showGatherAnimation(availablePeople, prize);
+        }
+
+         // 恢复滑块动画
+         function resumeSlideAnimation() {
+             if (!currentAnimationData) return;
+             
+             const { availablePeople, prize, tiles, packetRects, slideInterval } = currentAnimationData;
+             
+             // 清理旧的定时器
+             if (pauseIntervalId) {
+                 clearInterval(pauseIntervalId);
+                 pauseIntervalId = null;
+             }
+             
+             // 重新开始滑动动画
+             pauseIntervalId = setInterval(() => {
+                 if (isPaused) return;
+                 
+                 tiles.forEach(tileObj => {
+                     // 随机选择目标红包位置
+                     const randomPacket = packetRects[Math.floor(Math.random() * packetRects.length)];
+                     tileObj.currentTarget = randomPacket;
+                     
+                     tileObj.element.style.transform = `translate3d(${randomPacket.x - 25}px, ${randomPacket.y - 25}px, 0)`;
+                 });
+             }, 80);
+         }
+ 
+         // 恢复球体动画
+         function resumeGatherAnimation() {
+             if (!currentAnimationData) return;
+             
+             const { availablePeople, prize } = currentAnimationData;
+             
+             // 清理旧的定时器
+             if (pauseIntervalId) {
+                 clearInterval(pauseIntervalId);
+                 pauseIntervalId = null;
+             }
+             
+             // 重新开始球体动画
+             showGatherAnimation(availablePeople, prize);
+         }
+
+        // 检查浏览器兼容性
+        function checkCompatibility() {
+            const warnings = [];
+
+            // 检查 localStorage
+            if (!window.localStorage) {
+                warnings.push('浏览器不支持 LocalStorage');
+            }
+
+            // 检查 CSS3 支持
+            const testDiv = document.createElement('div');
+            if (!('transform' in testDiv.style)) {
+                warnings.push('浏览器不支持 CSS3 Transform');
+            }
+
+            if (!('backfaceVisibility' in testDiv.style)) {
+                warnings.push('浏览器不支持 backface-visibility');
+            }
+
+            // 检查 ES6 支持
+            try {
+                new Function('const test = () => {}');
+            } catch (e) {
+                warnings.push('浏览器不支持 ES6 语法');
+            }
+
+            if (warnings.length > 0) {
+                const check = document.getElementById('compatibility-check');
+                check.textContent = '⚠️ 检测到浏览器兼容性问题：' + warnings.join('、');
+                check.classList.add('show');
+                setTimeout(() => check.classList.remove('show'), 5000);
+            }
+        }
+
+        // 显示数据备份提醒
+        function showBackupReminder() {
+            const reminder = document.getElementById('backup-reminder');
+            reminder.classList.add('show');
+        }
+
+        // 关闭数据备份提醒
+        function closeBackupReminder() {
+            const reminder = document.getElementById('backup-reminder');
+            reminder.classList.remove('show');
+        }
+
+        // 检查是否需要备份
+        function checkBackupNeeded() {
+            // 如果有数据且超过7天未备份，显示提醒
+            const lastBackup = localStorage.getItem('lastBackupTime');
+            const now = Date.now();
+            
+            if (people.length > 0 || prizes.length > 0) {
+                if (!lastBackup || (now - parseInt(lastBackup)) > 7 * 24 * 60 * 60 * 1000) {
+                    setTimeout(() => showBackupReminder(), 2000);
+                }
+            }
+        }
+
+        // 渲染历史记录
+        function renderHistory() {
+            const container = document.getElementById('history-list');
+            
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📜</div>
+                        <p>暂无历史记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = history.map((item, index) => {
+                const time = new Date(item.time).toLocaleString('zh-CN');
+                const isRevoked = item.revoked;
+                
+                return `
+                    <div class="history-item ${isRevoked ? 'revoked' : ''}">
+                        <div class="history-item-header">
+                            <span class="history-item-prize">${item.prizeName}</span>
+                            <span class="history-item-time">${time}</span>
+                        </div>
+                        <div class="history-item-winners">
+                            <strong>中奖者：</strong>${item.winners.join('、')}
+                            ${isRevoked ? ' <span style="color:#ff6b6b;">(已撤销)</span>' : ''}
+                        </div>
+                        ${!isRevoked ? `
+                            <div class="history-item-actions">
+                                <button class="revoke-btn" onclick="revokeWinner(${index})">撤销中奖</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 撤销中奖
+        function revokeWinner(historyIndex) {
+            if (!confirm('确定要撤销这个中奖记录吗？')) {
+                return;
+            }
+
+            const record = history[historyIndex];
+            if (record.revoked) {
+                showToast('该记录已撤销', 'warning');
+                return;
+            }
+
+            // 恢复中奖人员的抽奖资格
+            record.winners.forEach(winnerName => {
+                const personIndex = people.findIndex(p => p.name === winnerName);
+                if (personIndex !== -1) {
+                    people[personIndex].prize = null;
+                }
+            });
+
+            // 恢复奖项的抽奖资格
+            const prizeIndex = prizes.findIndex(p => p.name === record.prizeName);
+            if (prizeIndex !== -1) {
+                prizes[prizeIndex].awarded = false;
+            }
+
+            // 标记记录为已撤销
+            record.revoked = true;
+
+            // 保存数据
+            saveData();
+
+            // 重新渲染
+            renderAll();
+            renderHistory();
+
+            showToast('中奖记录已撤销', 'success');
+        }
+
+        // 检查浏览器兼容性
+        function checkCompatibility() {
+            const warnings = [];
+
+            // 检查 localStorage
+            if (!window.localStorage) {
+                warnings.push('浏览器不支持 LocalStorage');
+            }
+
+            // 检查 CSS3 支持
+            const testDiv = document.createElement('div');
+            if (!('transform' in testDiv.style)) {
+                warnings.push('浏览器不支持 CSS3 Transform');
+            }
+
+            if (!('backfaceVisibility' in testDiv.style)) {
+                warnings.push('浏览器不支持 backface-visibility');
+            }
+
+            // 检查 ES6 支持
+            try {
+                new Function('const test = () => {}');
+            } catch (e) {
+                warnings.push('浏览器不支持 ES6 语法');
+            }
+
+            if (warnings.length > 0) {
+                const check = document.getElementById('compatibility-check');
+                check.textContent = '⚠️ 检测到浏览器兼容性问题：' + warnings.join('、');
+                check.classList.add('show');
+                setTimeout(() => check.classList.remove('show'), 5000);
+            }
+        }
+
+        // 显示数据备份提醒
+        function showBackupReminder() {
+            const reminder = document.getElementById('backup-reminder');
+            reminder.classList.add('show');
+        }
+
+        // 关闭数据备份提醒
+        function closeBackupReminder() {
+            const reminder = document.getElementById('backup-reminder');
+            reminder.classList.remove('show');
+        }
+
+        // 检查是否需要备份
+        function checkBackupNeeded() {
+            // 如果有数据且超过7天未备份，显示提醒
+            const lastBackup = localStorage.getItem('lastBackupTime');
+            const now = Date.now();
+            
+            if (appState.people.length > 0 || appState.prizes.length > 0) {
+                if (!lastBackup || (now - parseInt(lastBackup)) > 7 * 24 * 60 * 60 * 1000) {
+                    setTimeout(() => showBackupReminder(), 2000);
+                }
+            }
         }
 
         function showGatherAnimation(availablePeople, prize) {
@@ -1686,6 +3068,12 @@
             ball.innerHTML = '';
             ball.style.animation = 'none';
             ball.style.transform = 'rotateY(0deg)';
+
+            // 清理之前的动画
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
 
             currentAnimationData = { availablePeople, prize };
 
@@ -1780,6 +3168,25 @@
             btn.classList.remove('running');
             btn.style.visibility = 'visible';
             isLotteryRunning = false;
+            isPaused = false;
+            
+             // 隐藏暂停按钮
+             const pauseBtn = document.getElementById('pause-btn');
+             pauseBtn.style.display = 'none';
+             
+             // 清理定时器
+             if (pauseIntervalId) {
+                 clearInterval(pauseIntervalId);
+                 pauseIntervalId = null;
+             }
+             
+             // 清理滑动动画定时器
+             if (currentAnimationData && currentAnimationData.slideInterval) {
+                 clearInterval(currentAnimationData.slideInterval);
+                 currentAnimationData.slideInterval = null;
+             }
+             
+             showToast('抽奖完成！', 'success');
         }
 
         function cancelLottery() {
@@ -1799,6 +3206,25 @@
             btn.classList.remove('running');
             btn.style.visibility = 'visible';
             isLotteryRunning = false;
+            isPaused = false;
+            
+             // 隐藏暂停按钮
+             const pauseBtn = document.getElementById('pause-btn');
+             pauseBtn.style.display = 'none';
+             
+             // 清理定时器
+             if (pauseIntervalId) {
+                 clearInterval(pauseIntervalId);
+                 pauseIntervalId = null;
+             }
+             
+             // 清理滑动动画定时器
+             if (currentAnimationData && currentAnimationData.slideInterval) {
+                 clearInterval(currentAnimationData.slideInterval);
+                 currentAnimationData.slideInterval = null;
+             }
+             
+             showToast('已取消抽奖', 'info');
         }
 
         function showWinners(prize, winners) {
@@ -1810,8 +3236,11 @@
             modal.classList.add('active');
         }
 
-        document.getElementById('winner-modal').addEventListener('click', () => {
-            document.getElementById('winner-modal').classList.remove('active');
+        document.getElementById('winner-modal').addEventListener('click', (e) => {
+            // 只有点击弹窗背景（非内容区域）才关闭
+            if (e.target.id === 'winner-modal') {
+                closeWinnerModal();
+            }
         });
 
         function launchFireworks() {
@@ -1888,14 +3317,16 @@
             if (duplicateNames.length > 0) {
                 msg += `\n跳过重复姓名: ${duplicateNames.join('、')}`;
             }
-            alert(msg);
+            showToast(msg, 'success');
         }
 
         function clearPeople() {
             if (confirm('确定要清空所有人员吗？')) {
-                people = [];
+                appState.people = [];
+                people = appState.people;
                 saveData();
                 renderAll();
+                showToast('人员已清空', 'success');
             }
         }
 
@@ -1926,8 +3357,10 @@
                     people = [...people, ...newPeople];
                     saveData();
                     renderAll();
-                    alert(`成功导入 ${newPeople.length} 名人员`);
-                } catch (err) { alert('文件格式错误'); }
+                    showToast(`成功导入 ${newPeople.length} 名人员`, 'success');
+                } catch (err) {
+                    showToast('文件格式错误：' + err.message, 'error', 5000);
+                }
                 closeImportModal();
             };
             reader.readAsText(file);
@@ -1946,38 +3379,63 @@
                     settings = data.settings || settings;
                     saveData();
                     renderAll();
-                    alert('配置导入成功');
-                } catch (err) { alert('配置文件格式错误'); }
+                    showToast('配置导入成功', 'success');
+                } catch (err) {
+                    showToast('配置文件格式错误：' + err.message, 'error', 5000);
+                }
                 closeImportAllModal();
             };
             reader.readAsText(file);
         });
 
+        function exportData() {
+            exportAll();
+        }
+
         function exportAll() {
-            const data = {
-                people,
-                prizes,
-                history,
-                settings: {
-                    title: settings.title,
-                    background: settings.background,
-                    lotteryMode: settings.lotteryMode
-                },
-                exportTime: new Date().toISOString()
-            };
-            downloadFile(JSON.stringify(data, null, 2), '抽奖系统配置.json', 'application/json');
+            try {
+                const data = {
+                    people,
+                    prizes,
+                    history,
+                    settings: {
+                        title: settings.title,
+                        background: settings.background,
+                        lotteryMode: settings.lotteryMode
+                    },
+                    exportTime: new Date().toISOString()
+                };
+                downloadFile(JSON.stringify(data, null, 2), '抽奖系统配置.json', 'application/json');
+                
+                // 更新备份时间
+                localStorage.setItem('lastBackupTime', Date.now().toString());
+                closeBackupReminder();
+                showToast('导出成功！', 'success');
+            } catch (e) {
+                console.error('导出失败:', e);
+                showToast('导出失败：' + e.message, 'error');
+            }
         }
 
         function clearAll() {
             if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
-                people = [];
-                prizes = [];
-                history = [];
-                settings = { title: '🎉 年会抽奖系统 🎊', background: 'gradient1' };
-                currentPrizeIndex = null;
+                appState.people = [];
+                appState.prizes = [];
+                appState.history = [];
+                appState.settings = { title: '🎉 年会抽奖系统 🎊', background: 'gradient1' };
+                appState.currentPrizeIndex = null;
+                
+                // 更新兼容性变量
+                people = appState.people;
+                prizes = appState.prizes;
+                history = appState.history;
+                settings = appState.settings;
+                currentPrizeIndex = appState.currentPrizeIndex;
+                
                 saveData();
                 renderAll();
                 closeSettings();
+                showToast('所有数据已清空', 'success');
             }
         }
 
@@ -1989,6 +3447,77 @@
             a.download = filename;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        // 触摸事件处理
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartTime = 0;
+
+        function handleTouchStart(e) {
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchStartTime = Date.now();
+        }
+
+        function handleTouchMove(e) {
+            // 可以在这里添加滑动逻辑
+        }
+
+        function handleTouchEnd(e) {
+            const touch = e.changedTouches[0];
+            const touchEndX = touch.clientX;
+            const touchEndY = touch.clientY;
+            const touchEndTime = Date.now();
+            const touchDuration = touchEndTime - touchStartTime;
+
+            // 计算滑动距离
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            // 如果滑动距离小于10px，视为点击
+            if (distance < 10) {
+                return;
+            }
+
+            // 水平滑动 - 打开/关闭奖项面板
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                const prizePanel = document.getElementById('prize-panel');
+                if (deltaX > 0) {
+                    // 向右滑动 - 打开面板
+                    prizePanel.classList.add('active');
+                } else {
+                    // 向左滑动 - 关闭面板
+                    prizePanel.classList.remove('active');
+                }
+            }
+
+            // 垂直滑动 - 切换背景
+            if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+                if (deltaY < 0) {
+                    // 向上滑动 - 下一个背景
+                    cycleBackground(1);
+                } else {
+                    // 向下滑动 - 上一个背景
+                    cycleBackground(-1);
+                }
+            }
+        }
+
+        function cycleBackground(direction) {
+            const backgrounds = ['gradient1', 'gradient2', 'gradient3', 'gradient4', 'gradient5'];
+            const currentIndex = backgrounds.indexOf(settings.background);
+            let newIndex = currentIndex + direction;
+            
+            if (newIndex < 0) newIndex = backgrounds.length - 1;
+            if (newIndex >= backgrounds.length) newIndex = 0;
+            
+            settings.background = backgrounds[newIndex];
+            document.body.className = settings.background;
+            saveData();
+            showToast(`已切换背景: ${newIndex + 1}/${backgrounds.length}`, 'info');
         }
 
         document.querySelectorAll('.settings-panel').forEach(panel => {
