@@ -465,27 +465,280 @@
             align-items: center;
             justify-content: center;
             z-index: 3000;
+            backdrop-filter: blur(10px);
         }
 
         .settings-panel.active {
             display: flex;
+            animation: fadeIn 0.3s ease;
         }
 
         .settings-content {
             background: linear-gradient(135deg, #1a1a2e, #16213e);
-            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
-            max-width: 500px;
+            max-width: 600px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .settings-header h2 {
+            color: #feca57;
+            margin: 0;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-settings-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-settings-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .settings-body {
+            padding: 20px 30px;
+        }
+
+        .settings-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .settings-section h3 {
+            color: #48dbfb;
+            margin: 0 0 15px 0;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-item {
+            margin-bottom: 15px;
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-item label {
+            display: block;
+            color: #fff;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .setting-item input[type="text"],
+        .setting-item input[type="number"],
+        .setting-item input[type="color"],
+        .setting-item textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .setting-item input[type="text"]:focus,
+        .setting-item input[type="number"]:focus,
+        .setting-item input[type="color"]:focus,
+        .setting-item textarea:focus {
+            outline: none;
+            border-color: #48dbfb;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(72, 219, 251, 0.2);
+        }
+
+        .setting-item textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .setting-item input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #aaa;
+            font-size: 12px;
+        }
+
+        .setting-item input[type="file"]:hover {
+            border-color: #48dbfb;
+            color: #fff;
+        }
+
+        .setting-item button {
+            width: 100%;
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .setting-item button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .setting-item button:active {
+            transform: translateY(0);
+        }
+
+        .setting-item button[style*="background: #e74c3c"] {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .setting-item button[style*="background: #e74c3c"]:hover {
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        .bg-options {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .bg-option {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
             position: relative;
         }
 
-        .settings-content h2 {
-            color: #feca57;
-            margin-bottom: 25px;
-            text-align: center;
+        .bg-option:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .bg-option.active {
+            border-color: #48dbfb;
+            box-shadow: 0 0 0 3px rgba(72, 219, 251, 0.3);
+        }
+
+        .bg-option.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .lottery-mode-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+        }
+
+        .lottery-mode-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .lottery-mode-options label:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #48dbfb;
+        }
+
+        .lottery-mode-options input[type="radio"] {
+            accent-color: #48dbfb;
+        }
+
+        .settings-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .settings-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .settings-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .settings-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .winner-modal {
@@ -1467,97 +1720,99 @@
                 <button class="close-settings-btn" onclick="closeSettings()">✕</button>
             </div>
             
-            <div class="settings-section">
-                <h3>🎨 界面设置</h3>
-                <div class="setting-item">
-                    <label>标题设置</label>
-                    <input type="text" id="setting-title" placeholder="输入标题">
-                    <button onclick="saveTitle()">保存标题</button>
-                </div>
-                
-                <div class="setting-item">
-                    <label>背景选择</label>
-                    <div class="bg-options">
-                        <div class="bg-option" data-bg="gradient1" style="background: linear-gradient(135deg, #1a1a2e, #16213e);"></div>
-                        <div class="bg-option" data-bg="gradient2" style="background: linear-gradient(135deg, #2c3e50, #3498db);"></div>
-                        <div class="bg-option" data-bg="gradient3" style="background: linear-gradient(135deg, #1a1a2e, #0f3460);"></div>
-                        <div class="bg-option" data-bg="gradient4" style="background: linear-gradient(135deg, #2c3e50, #4ca1af);"></div>
-                        <div class="bg-option" data-bg="gradient5" style="background: linear-gradient(135deg, #1a1a2e, #16213e);"></div>
+            <div class="settings-body">
+                <div class="settings-section">
+                    <h3>🎨 界面设置</h3>
+                    <div class="setting-item">
+                        <label>标题设置</label>
+                        <input type="text" id="setting-title" placeholder="输入标题">
+                        <button onclick="saveTitle()">💾 保存标题</button>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>背景选择</label>
+                        <div class="bg-options">
+                            <div class="bg-option" data-bg="gradient1" style="background: linear-gradient(135deg, #1a1a2e, #16213e);"></div>
+                            <div class="bg-option" data-bg="gradient2" style="background: linear-gradient(135deg, #2c3e50, #3498db);"></div>
+                            <div class="bg-option" data-bg="gradient3" style="background: linear-gradient(135deg, #1a1a2e, #0f3460);"></div>
+                            <div class="bg-option" data-bg="gradient4" style="background: linear-gradient(135deg, #2c3e50, #4ca1af);"></div>
+                            <div class="bg-option" data-bg="gradient5" style="background: linear-gradient(135deg, #1a1a2e, #16213e);"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>抽奖模式</label>
+                        <div class="lottery-mode-options">
+                            <label><input type="radio" name="lotteryMode" value="sphere" onchange="saveLotteryMode('sphere')"> 🎱 3D球体</label>
+                            <label><input type="radio" name="lotteryMode" value="slide" onchange="saveLotteryMode('slide')"> 🧱 方块滑动</label>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="setting-item">
-                    <label>抽奖模式</label>
-                    <div class="lottery-mode-options">
-                        <label><input type="radio" name="lotteryMode" value="sphere" onchange="saveLotteryMode('sphere')"> 3D球体</label>
-                        <label><input type="radio" name="lotteryMode" value="slide" onchange="saveLotteryMode('slide')"> 方块滑动</label>
+                <div class="settings-section">
+                    <h3>👥 人员管理</h3>
+                    <div class="setting-item">
+                        <label>添加人员（每行一个姓名）</label>
+                        <textarea id="add-people-text" placeholder="张三&#10;李四&#10;王五"></textarea>
+                        <button onclick="addPeople()">➕ 添加人员</button>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>导入人员文件</label>
+                        <input type="file" id="import-file" accept=".txt,.csv,.json">
+                        <button onclick="document.getElementById('import-file').click()">📁 选择文件</button>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <button onclick="clearPeople()" style="background: #e74c3c;">🗑️ 清空所有人员</button>
                     </div>
                 </div>
-            </div>
-            
-            <div class="settings-section">
-                <h3>👥 人员管理</h3>
-                <div class="setting-item">
-                    <label>添加人员（每行一个姓名）</label>
-                    <textarea id="add-people-text" placeholder="张三&#10;李四&#10;王五"></textarea>
-                    <button onclick="addPeople()">添加人员</button>
+                
+                <div class="settings-section">
+                    <h3>🏆 奖项管理</h3>
+                    <div class="setting-item">
+                        <label>奖项名称</label>
+                        <input type="text" id="setting-prize-name" placeholder="一等奖">
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>奖项描述</label>
+                        <input type="text" id="setting-prize-desc" placeholder="价值1000元">
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>获奖人数</label>
+                        <input type="number" id="setting-prize-count" value="1" min="1">
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>奖项颜色</label>
+                        <input type="color" id="setting-prize-color" value="#ff6b6b">
+                    </div>
+                    
+                    <div class="setting-item">
+                        <button onclick="addPrizeFromSettings()">➕ 添加奖项</button>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <button onclick="clearPrizes()" style="background: #e74c3c;">🗑️ 清空所有奖项</button>
+                    </div>
                 </div>
                 
-                <div class="setting-item">
-                    <label>导入人员文件</label>
-                    <input type="file" id="import-file" accept=".txt,.csv,.json">
-                    <button onclick="document.getElementById('import-file').click()">选择文件</button>
-                </div>
-                
-                <div class="setting-item">
-                    <button onclick="clearPeople()" style="background: #e74c3c;">清空所有人员</button>
-                </div>
-            </div>
-            
-            <div class="settings-section">
-                <h3>🏆 奖项管理</h3>
-                <div class="setting-item">
-                    <label>奖项名称</label>
-                    <input type="text" id="setting-prize-name" placeholder="一等奖">
-                </div>
-                
-                <div class="setting-item">
-                    <label>奖项描述</label>
-                    <input type="text" id="setting-prize-desc" placeholder="价值1000元">
-                </div>
-                
-                <div class="setting-item">
-                    <label>获奖人数</label>
-                    <input type="number" id="setting-prize-count" value="1" min="1">
-                </div>
-                
-                <div class="setting-item">
-                    <label>奖项颜色</label>
-                    <input type="color" id="setting-prize-color" value="#ff6b6b">
-                </div>
-                
-                <div class="setting-item">
-                    <button onclick="addPrizeFromSettings()">添加奖项</button>
-                </div>
-                
-                <div class="setting-item">
-                    <button onclick="clearPrizes()" style="background: #e74c3c;">清空所有奖项</button>
-                </div>
-            </div>
-            
-            <div class="settings-section">
-                <h3>💾 数据管理</h3>
-                <div class="setting-item">
-                    <button onclick="exportData()">导出配置数据</button>
-                </div>
-                
-                <div class="setting-item">
-                    <button onclick="document.getElementById('import-all-file').click()">导入配置数据</button>
-                    <input type="file" id="import-all-file" accept=".json" style="display:none;">
-                </div>
-                
-                <div class="setting-item">
-                    <button onclick="clearAll()" style="background: #e74c3c;">清空所有数据</button>
+                <div class="settings-section">
+                    <h3>💾 数据管理</h3>
+                    <div class="setting-item">
+                        <button onclick="exportData()">📤 导出配置数据</button>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <button onclick="document.getElementById('import-all-file').click()">📥 导入配置数据</button>
+                        <input type="file" id="import-all-file" accept=".json" style="display:none;">
+                    </div>
+                    
+                    <div class="setting-item">
+                        <button onclick="clearAll()" style="background: #e74c3c;">💥 清空所有数据</button>
+                    </div>
                 </div>
             </div>
         </div>
